@@ -2,14 +2,18 @@
   "name": "contest",
   "version": "0.0.1",
   "description": "A JS test runner inspired by Rspec",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "contest": "tsx src/bin/contest.ts",
+    "test": "npm run contest"
   },
   "author": "Vincent Prêtre",
   "license": "ISC",
-  "dependencies": {
-    "ts-node": "^10.9.2",
+  "devDependencies": {
+    "@jest/expect": "^30.4.1",
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
 }
