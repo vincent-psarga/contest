@@ -1,8 +1,9 @@
 import type {ITestRegistry} from "../../domain/services/ITestRegistry";
-import type {ITestSuite} from "../../domain/models/ITestSuite";
+import type {Hooks, ITestSuite} from "../../domain/models/ITestSuite";
 import type {IEventBus} from "../../domain/services/events/IEventBus";
 import {ContestEvents} from "../../domain/services/events/ContestEvents";
 import type {ITest} from "../../domain/models/ITest";
+import type {TestBody} from "../../domain/models/TestBody";
 
 export class TestRegistry implements ITestRegistry {
     private readonly _testSuites: ITestSuite<unknown>[] = [];
@@ -10,7 +11,8 @@ export class TestRegistry implements ITestRegistry {
 
     constructor(
         private readonly eventBus: IEventBus,
-    ) {}
+    ) {
+    }
 
     get testSuites() {
         return this._testSuites;
@@ -29,6 +31,14 @@ export class TestRegistry implements ITestRegistry {
             await callback();
             await this.eventBus.emit(ContestEvents.TestSuiteLoaded, { testSuite, container: this.currentTestSuite })
         });
+    }
+
+    async registerHook(hook: Hooks, body: TestBody) {
+        if (!this.currentTestSuite) {
+            throw new Error(`Unable to register hook ${hook} - no current test suite`);
+        }
+        this.currentTestSuite.addHook(hook, body);
+        await this.eventBus.emit(ContestEvents.HookRegistered, { hook, testSuite: this.currentTestSuite });
     }
 
     registerTest(test: ITest) {

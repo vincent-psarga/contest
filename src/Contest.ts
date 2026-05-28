@@ -5,10 +5,11 @@ import type {ITestLoader} from "./domain/services/ITestLoader";
 import {DebugListener} from "./application/services/events/DebugListener";
 import type {ITestRegistry} from "./domain/services/ITestRegistry";
 import {TestRegistry} from "./application/services/TestRegistry";
-import type {ITestSuite} from "./domain/models/ITestSuite";
+import {Hooks, type ITestSuite} from "./domain/models/ITestSuite";
 import type {ITest} from "./domain/models/ITest";
 import type {ITestRunner} from "./domain/services/ITestRunner";
 import {TestRunner} from "./application/services/TestRunner";
+import type {TestBody} from "./domain/models/TestBody";
 
 type ContestOptions = {
     testLoader: ITestLoader;
@@ -48,5 +49,9 @@ export class Contest {
 
     registerTest(test: ITest) {
         return this.testRegistry.registerTest(test);
+    }
+
+    registerHook(hook: Hooks, body: TestBody) {
+        return this.testRegistry.registerHook(hook, body)
     }
 }

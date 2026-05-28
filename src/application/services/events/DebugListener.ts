@@ -7,7 +7,11 @@ export class DebugListener implements IEventListener {
     }
 
     async onTestSuiteLoaded(payload: PayloadByEvent[ContestEvents.TestSuiteLoaded]) {
-        console.log(`Loaded test suite: ${payload.testSuite.name} (in ${payload.container?.name ?? 'registry root'}`)
+        console.log(`Loaded test suite: ${payload.testSuite.name} (in ${payload.container?.name ?? 'registry root'})`)
+    }
+
+    async onHookRegistered(payload: PayloadByEvent[ContestEvents.HookRegistered]) {
+        console.log(`Registered hook: ${payload.hook} in ${payload.testSuite.name }`)
     }
 
     async onTestLoaded(payload: PayloadByEvent[ContestEvents.TestLoaded]) {
