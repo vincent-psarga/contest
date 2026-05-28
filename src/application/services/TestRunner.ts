@@ -18,7 +18,7 @@ export class TestRunner implements ITestRunner {
         try {
             for (const ancestor of ancestors) {
                 if (ancestor.hooks?.beforeEach) {
-                    ancestor.hooks.beforeEach();
+                    await ancestor.hooks.beforeEach();
                 }
             }
 
