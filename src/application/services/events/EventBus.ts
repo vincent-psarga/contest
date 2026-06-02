@@ -9,12 +9,12 @@ export class EventBus implements IEventBus {
         this.listeners.push(listener);
     }
 
-    async emit<K extends ContestEvents>(event: K, payload:PayloadByEvent[K]): Promise<void> {
-        await Promise.all(this.listeners.map(listener => {
+    emit<K extends ContestEvents>(event: K, payload:PayloadByEvent[K]): void {
+        for (const listener of this.listeners) {
             const callback = listener[`on${event}`]
             assertCallbackType<PayloadByEvent[K]>(callback);
-            return callback.bind(listener)(payload);
-        }));
+            callback.bind(listener)(payload);
+        }
     }
 }
 

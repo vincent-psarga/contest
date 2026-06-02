@@ -20,13 +20,13 @@ type EventPayloadMap<E extends string> = {
 
 const payloadByEvent = {
     [ContestEvents.TestFileLoaded]: {} as { testFile: { path: string } },
-    [ContestEvents.TestSuiteLoaded]: {} as { testSuite: ITestSuite<unknown>, container: ITestSuite<unknown> | null },
-    [ContestEvents.HookRegistered]: {} as { testSuite: ITestSuite<unknown>, hook: Hooks },
-    [ContestEvents.TestLoaded]: {} as { test: ITest, testSuite: ITestSuite<unknown> },
+    [ContestEvents.TestSuiteLoaded]: {} as { testSuite: ITestSuite, container: ITestSuite | null },
+    [ContestEvents.HookRegistered]: {} as { testSuite: ITestSuite, hook: Hooks },
+    [ContestEvents.TestLoaded]: {} as { test: ITest, testSuite: ITestSuite },
     [ContestEvents.TestStarted]: {} as { test: ITest },
     [ContestEvents.TestEnded]: {} as { test: ITest, status: TestStatus },
-    [ContestEvents.TestSuiteStarted]: {} as { testSuite: ITestSuite<unknown> },
-    [ContestEvents.TestSuiteEnded]: {} as { testSuite: ITestSuite<unknown>, status: TestSuiteStatus },
+    [ContestEvents.TestSuiteStarted]: {} as { testSuite: ITestSuite },
+    [ContestEvents.TestSuiteEnded]: {} as { testSuite: ITestSuite, status: TestSuiteStatus },
 } satisfies EventPayloadMap<ContestEvents>;
 
 export type PayloadByEvent = typeof payloadByEvent;

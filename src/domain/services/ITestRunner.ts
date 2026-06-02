@@ -4,7 +4,7 @@ import type {TestStatus} from "../models/TestStatus";
 import type {TestSuiteStatus} from "../models/TestSuiteStatus";
 
 export interface ITestRunner {
-    runTestSuites<T>(testSuite: ITestSuite<T>[]): Promise<TestSuiteStatus>;
-    runTestSuite<T>(testSuite: ITestSuite<T>, ancestors: ITestSuite<T>[]): Promise<TestSuiteStatus>;
-    runTest(test: ITest, ancestors: ITestSuite<unknown>[]): Promise<TestStatus>;
+    runTestSuites(testSuite: ITestSuite[]): Promise<TestSuiteStatus>;
+    runTestSuite(testSuite: ITestSuite, ancestors: ITestSuite[]): Promise<TestSuiteStatus>;
+    runTest(test: ITest, ancestors: ITestSuite[]): Promise<TestStatus>;
 }

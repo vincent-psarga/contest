@@ -24,10 +24,10 @@ describe('TestRegistry', () => {
         testRegistry = new TestRegistry(eventBus);
     })
 
-    describe('.register', () => {
+    describe('#register', () => {
         describe('when there is no test suite loaded yet', () => {
-            beforeEach(async () => {
-                await testRegistry.registerTestSuite(testSuite, () => {});
+            beforeEach(() => {
+                testRegistry.registerTestSuite(testSuite, () => {});
             })
 
             it('adds the testSuite at the root level', () => {
@@ -36,14 +36,14 @@ describe('TestRegistry', () => {
         });
 
         describe('when registering sub-test suite in the callback', () => {
-            beforeEach(async () => {
-                await testRegistry.registerTestSuite(testSuite, () => {
+            beforeEach(() => {
+                testRegistry.registerTestSuite(testSuite, () => {
                     testRegistry.registerTestSuite(subTestSuite, () => {});
                 });
             });
 
-            it('stores the subSuite inside the mother one', async () => {
-                assert.deepEqual(testRegistry.testSuites[0].testSuites, [subTestSuite]);
+            it('stores the subSuite inside the mother one', () => {
+                assert.deepEqual(testRegistry.testSuites[0]?.testSuites, [subTestSuite]);
             })
         });
     })

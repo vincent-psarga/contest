@@ -1,6 +1,6 @@
 import type {ITestSuite} from "../../domain/models/ITestSuite";
 import type {ITestLoader} from "../../domain/services/ITestLoader";
-import {readdirSync} from "fs";
+import {readdirSync, statSync} from "fs";
 import {join} from "path";
 import {TestSuite} from "../../application/models/TestSuite";
 import type {IEventBus} from "../../domain/services/events/IEventBus";
@@ -14,26 +14,30 @@ export class FsTestLoader implements ITestLoader {
         private readonly extMatcher = ".spec.ts"
     ) {}
 
-    async load(workingDirectory: string): Promise<ITestSuite<unknown>[]> {
+    async load(workingDirectory: string): Promise<ITestSuite[]> {
         const specFiles = this.findSpecFiles(workingDirectory);
-        return Promise.all(
-            specFiles.map(file => {
-                return new Promise<ITestSuite<unknown>>((resolve, reject) => {
-                    const testSuite = new TestSuite(file);
-                    this.testRegistry.registerTestSuite(testSuite, async () => {
-                        return import(file)
-                            .then(() => {
-                                this.eventBus.emit(ContestEvents.TestFileLoaded, { testFile: { path: file } });
-                                resolve(testSuite);
-                            })
-                            .catch(reject);
-                    });
-                });
-            })
-        );
+        const fileSuites: ITestSuite[] = [];
+
+        for (const file of specFiles) {
+            const fileSuite = new TestSuite(file);
+            this.testRegistry.beginSuite(fileSuite);
+            try {
+                await import(file);
+            } finally {
+                this.testRegistry.endSuite();
+            }
+            this.eventBus.emit(ContestEvents.TestFileLoaded, { testFile: { path: file } });
+            fileSuites.push(fileSuite);
+        }
+
+        return fileSuites;
     }
 
     private findSpecFiles(dir: string): string[] {
+        if (statSync(dir).isFile()) {
+            return [dir];
+        }
+
         const results: string[] = [];
         const entries = readdirSync(dir, { withFileTypes: true });
 

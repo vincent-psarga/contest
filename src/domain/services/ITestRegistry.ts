@@ -3,9 +3,13 @@ import type {ITest} from "../models/ITest";
 import type {TestBody} from "../models/TestBody";
 
 export interface ITestRegistry {
-    testSuites: ITestSuite<unknown>[];
+    testSuites: ITestSuite[];
+    currentTestSuite: ITestSuite | null;
 
     registerTest(test: ITest): void;
-    registerTestSuite<T>(testSuite: ITestSuite<T>, callback: () => void | Promise<void>): Promise<void>;
-    registerHook(hook: Hooks, body: TestBody): Promise<void>;
+    registerTestSuite(testSuite: ITestSuite, callback: () => void): void;
+    registerHook(hook: Hooks, body: TestBody): void;
+
+    beginSuite(testSuite: ITestSuite): void;
+    endSuite(): void;
 }

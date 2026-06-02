@@ -10,10 +10,15 @@ import type {ITest} from "./domain/models/ITest";
 import type {ITestRunner} from "./domain/services/ITestRunner";
 import {TestRunner} from "./application/services/TestRunner";
 import type {TestBody} from "./domain/models/TestBody";
+import {Context} from "./application/dsl/Context";
+import type {ITestContextRegistry} from "./domain/services/ITestContextRegistry";
+import {TestContextRegistry} from "./application/services/TestContextRegistry";
+import * as path from "node:path";
 
 type ContestOptions = {
     testLoader: ITestLoader;
     testRegistry: ITestRegistry;
+    testContextRegistry: ITestContextRegistry;
     testRunner: ITestRunner;
     eventBus: IEventBus;
 }
@@ -23,6 +28,7 @@ export class Contest {
     private readonly testLoader: ITestLoader;
     private readonly testRegistry: ITestRegistry;
     private readonly testRunner: ITestRunner;
+    private readonly testContextRegistry: ITestContextRegistry;
     private readonly eventBus: IEventBus;
 
     constructor(
@@ -30,28 +36,36 @@ export class Contest {
     ) {
         this.eventBus = opts?.eventBus ?? new EventBus();
         this.testRegistry = opts?.testRegistry ?? new TestRegistry(this.eventBus);
+        this.testContextRegistry = opts?.testContextRegistry ?? new TestContextRegistry(
+            () => this.testRegistry.currentTestSuite
+        );
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
-        this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus);
+        this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry);
 
         this.eventBus.addListener(new DebugListener());
     }
 
-    async run() {
-      await this.testLoader.load(process.cwd());
-      const status = await this.testRunner.runTestSuites(this.testRegistry.testSuites);
+    async run(p?: string) {
+        const cwd = process.cwd();
+        const testPath = p ? path.join(cwd, p) : cwd;
 
-      console.log({status})
+        await this.testLoader.load(testPath);
+        return this.testRunner.runTestSuites(this.testRegistry.testSuites);
     }
 
-    async registerTestSuite<T>(testSuite: ITestSuite<T>, callback: () => void | Promise<void>) {
-        return this.testRegistry.registerTestSuite(testSuite, callback);
+    getContext<T>(testSuite: ITestSuite): Context<T> {
+        return this.testContextRegistry.getContext(testSuite.id);
+    };
+
+    registerTestSuite(testSuite: ITestSuite, callback: () => void): void {
+        this.testRegistry.registerTestSuite(testSuite, callback);
     }
 
-    registerTest(test: ITest) {
-        return this.testRegistry.registerTest(test);
+    registerTest(test: ITest): void {
+        this.testRegistry.registerTest(test);
     }
 
-    registerHook(hook: Hooks, body: TestBody) {
-        return this.testRegistry.registerHook(hook, body)
+    registerHook(hook: Hooks, body: TestBody): void {
+        this.testRegistry.registerHook(hook, body);
     }
 }

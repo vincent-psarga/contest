@@ -10,7 +10,7 @@ class It {
     ) {}
 
     register() {
-        this.contest.registerTest(new Test(this.name, this.testBody))
+        this.contest.registerTest(new Test(this.name, this.testBody));
     }
 }
 

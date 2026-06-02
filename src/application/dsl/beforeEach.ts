@@ -9,7 +9,7 @@ class BeforeEach {
     ) {}
 
     register() {
-        return this.contest.registerHook(Hooks.beforeEach, this.body);
+        this.contest.registerHook(Hooks.beforeEach, this.body);
     }
 }
 

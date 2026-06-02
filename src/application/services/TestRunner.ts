@@ -5,25 +5,29 @@ import type {IEventBus} from "../../domain/services/events/IEventBus";
 import {ContestEvents} from "../../domain/services/events/ContestEvents";
 import {StatusEnum, type TestStatus} from "../../domain/models/TestStatus";
 import type {TestSuiteStatus} from "../../domain/models/TestSuiteStatus";
+import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 
 export class TestRunner implements ITestRunner {
     constructor(
         private readonly eventBus: IEventBus,
+        private readonly testContextRegistry: ITestContextRegistry,
     ) {}
 
-    async runTest(test: ITest, ancestors: ITestSuite<unknown>[]) {
-        await this.eventBus.emit(ContestEvents.TestStarted, { test })
+    async runTest(test: ITest, ancestors: ITestSuite[]) {
+        this.eventBus.emit(ContestEvents.TestStarted, { test })
         let status: TestStatus;
 
         try {
-            for (const ancestor of ancestors) {
-                if (ancestor.hooks?.beforeEach) {
-                    await ancestor.hooks.beforeEach();
+            await this.testContextRegistry.withAncestors(ancestors, async() => {
+                for (const ancestor of ancestors) {
+                    if (ancestor.hooks?.beforeEach) {
+                        await ancestor.hooks.beforeEach();
+                    }
                 }
-            }
 
-            await test.body();
-            status = { status: StatusEnum.ok}
+                return test.body();
+            })
+            status = { status: StatusEnum.ok};
         } catch (err) {
             status = {
                 status: StatusEnum.fail,
@@ -32,12 +36,12 @@ export class TestRunner implements ITestRunner {
         }
 
 
-        await this.eventBus.emit(ContestEvents.TestEnded, { test, status });
+        this.eventBus.emit(ContestEvents.TestEnded, { test, status });
         return status;
     }
 
-    async runTestSuite<T>(testSuite: ITestSuite<T>, ancestors: ITestSuite<T>[]) {
-        await this.eventBus.emit(ContestEvents.TestSuiteStarted, { testSuite })
+    async runTestSuite(testSuite: ITestSuite, ancestors: ITestSuite[]) {
+        this.eventBus.emit(ContestEvents.TestSuiteStarted, { testSuite })
         let status: TestSuiteStatus | undefined = undefined;
 
         for (const subSuite of testSuite.testSuites) {
@@ -50,12 +54,12 @@ export class TestRunner implements ITestRunner {
 
         status ??= { status: StatusEnum.notRun }
 
-        await this.eventBus.emit(ContestEvents.TestSuiteEnded, { testSuite, status});
+        this.eventBus.emit(ContestEvents.TestSuiteEnded, { testSuite, status});
 
         return status;
     }
 
-    async runTestSuites<T>(testSuites: ITestSuite<T>[]) {
+    async runTestSuites<T>(testSuites: ITestSuite[]) {
         let status: TestSuiteStatus | undefined = undefined;
 
         for (const testSuite of testSuites) {

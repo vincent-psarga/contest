@@ -1,7 +1,6 @@
 import type {IContext} from "../../domain/models/IContext";
 import {Contest} from "../../Contest";
 import {TestSuite} from "../models/TestSuite";
-import {Context} from "../models/Context";
 
 class Describe<T> {
     constructor(
@@ -11,13 +10,13 @@ class Describe<T> {
     ) {}
 
     register() {
-        const testSuite = new TestSuite<T>(this.name);
-        return this.contest.registerTestSuite(
+        const testSuite = new TestSuite(this.name);
+        this.contest.registerTestSuite(
             testSuite,
             () => {
-                this.content(new Context());
+                this.content(this.contest.getContext<T>(testSuite));
             }
-        )
+        );
     }
 }
 

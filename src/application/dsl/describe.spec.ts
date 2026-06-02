@@ -14,4 +14,4 @@ describe('SampleSUT', () => {
             assert.equal(new SampleSUT().hello('world'), 'Hello world');
         })
     })
-})
+});

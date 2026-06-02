@@ -1,4 +1,3 @@
-import type {IContext} from "./IContext";
 import type {ITest} from "./ITest";
 import type {TestBody} from "./TestBody";
 
@@ -6,14 +5,14 @@ export enum Hooks {
     beforeEach = 'beforeEach',
 }
 
-export interface ITestSuite<T> {
+export interface ITestSuite {
+    id: string;
     name: string;
-    testSuites: ITestSuite<unknown>[];
+    testSuites: ITestSuite[];
     tests: ITest[];
-    context: IContext<T>;
     hooks: Partial<Record<Hooks, TestBody>>;
 
     addHook: (hook: Hooks, body: TestBody) => void;
-    addTestSuite: (testSuite: ITestSuite<unknown>) => void;
+    addTestSuite: (testSuite: ITestSuite) => void;
     addTest: (test: ITest) =>  void;
 }
