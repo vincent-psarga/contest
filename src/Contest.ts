@@ -15,6 +15,7 @@ import {TestContextRegistry} from "./application/services/TestContextRegistry";
 import * as path from "node:path";
 import {ContestEvents} from "./domain/services/events/ContestEvents";
 import {DotReporter} from "./application/services/reporters/DotReporter";
+import {TreeReporter} from "./application/services/reporters/TreeReporter";
 
 type ContestOptions = {
     testLoader: ITestLoader;
@@ -43,7 +44,7 @@ export class Contest {
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
         this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry);
 
-        this.eventBus.addListener(new DotReporter());
+        this.eventBus.addListener(new TreeReporter());
     }
 
     async run(p?: string) {
