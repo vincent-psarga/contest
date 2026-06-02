@@ -2,6 +2,7 @@ import {describe} from "./describe";
 import {it} from "./it";
 import {jestExpect as expect} from "@jest/expect";
 import {ContextNotSetError} from "../../domain/errors/ContextNotSetError";
+import {fn} from "jest-mock";
 
 describe<{name: string}>('context', (context) => {
     describe('when context key has not been set', () => {
@@ -16,5 +17,26 @@ describe<{name: string}>('context', (context) => {
         it('uses the value set', () => {
             expect(context.get('name')).toEqual('test');
         });
+    });
+
+    describe('when a context is set multiple times', () => {
+        const firstMock = fn<() => string>().mockReturnValue('first-mock');
+        const secondMock = fn<() => string>().mockReturnValue('second-mock');
+
+        context.set('name', firstMock);
+
+        describe('inside the sub test suite', () => {
+            context.set('name', secondMock);
+
+            it('returns the closest value', () => {
+                expect(context.get('name')).toEqual('second-mock');
+            });
+
+            it('does not use callbacks from higher levels', () => {
+                context.get('name');
+
+                expect(firstMock).not.toHaveBeenCalled();
+            })
+        })
     })
 })

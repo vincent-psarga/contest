@@ -6,6 +6,7 @@ export class ContextStorage<T> implements IContext<T> {
     public readonly id = uuidv4();
     private readonly storage = new Map<string, unknown>();
     private readonly callbackStorage = new Map<string, () => unknown>();
+    private readonly _keys: (keyof T)[] = [];
 
     get<K extends keyof T>(key: K): T[K] {
         const value = this.storage.get(String(key)) as T[K];
@@ -24,10 +25,16 @@ export class ContextStorage<T> implements IContext<T> {
     }
 
     set<K extends keyof T>(key: K, value: Callbackable<T[K]>): void {
+        this._keys.push(key);
+
         if (typeof value === 'function') {
             this.callbackStorage.set(String(key), value as () => T[K]);
         } else {
             this.storage.set(String(key), value);
         }
+    }
+
+    get keys(): (keyof T) [] {
+        return this._keys;
     }
 }
