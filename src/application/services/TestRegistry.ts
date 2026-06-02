@@ -23,32 +23,21 @@ export class TestRegistry implements ITestRegistry {
         return this._currentTestSuite;
     }
 
+    async registerTestFile(testSuite: ITestSuite, callback: () => Promise<void>): Promise<void> {
+        this.beginSuite(testSuite);
+        try {
+            await callback();
+        } finally {
+            this.endSuite();
+        }
+    }
+
     registerTestSuite(testSuite: ITestSuite, callback: () => void): void {
         this.beginSuite(testSuite);
         try {
             callback();
         } finally {
             this.endSuite();
-        }
-    }
-
-    beginSuite(testSuite: ITestSuite): void {
-        const previous = this._currentTestSuite;
-        if (previous === null) {
-            this._testSuites.push(testSuite);
-        } else {
-            previous.addTestSuite(testSuite);
-        }
-        this._ancestorStack.push(previous);
-        this._currentTestSuite = testSuite;
-    }
-
-    endSuite(): void {
-        const ending = this._currentTestSuite;
-        const previous = this._ancestorStack.pop() ?? null;
-        this._currentTestSuite = previous;
-        if (ending) {
-            this.eventBus.emit(ContestEvents.TestSuiteLoaded, { testSuite: ending, container: previous });
         }
     }
 
@@ -65,5 +54,25 @@ export class TestRegistry implements ITestRegistry {
             throw new Error(`Unable to register test "${test.name} - no current test suite`)
         }
         this._currentTestSuite.addTest(test);
+    }
+
+    private beginSuite(testSuite: ITestSuite): void {
+        const previous = this._currentTestSuite;
+        if (previous === null) {
+            this._testSuites.push(testSuite);
+        } else {
+            previous.addTestSuite(testSuite);
+        }
+        this._ancestorStack.push(previous);
+        this._currentTestSuite = testSuite;
+    }
+
+    private endSuite(): void {
+        const ending = this._currentTestSuite;
+        const previous = this._ancestorStack.pop() ?? null;
+        this._currentTestSuite = previous;
+        if (ending) {
+            this.eventBus.emit(ContestEvents.TestSuiteLoaded, { testSuite: ending, container: previous });
+        }
     }
 }

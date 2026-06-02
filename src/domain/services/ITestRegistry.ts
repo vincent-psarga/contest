@@ -7,9 +7,7 @@ export interface ITestRegistry {
     currentTestSuite: ITestSuite | null;
 
     registerTest(test: ITest): void;
+    registerTestFile(testSuite: ITestSuite, callback: () => Promise<void>): Promise<void>;
     registerTestSuite(testSuite: ITestSuite, callback: () => void): void;
     registerHook(hook: Hooks, body: TestBody): void;
-
-    beginSuite(testSuite: ITestSuite): void;
-    endSuite(): void;
 }

@@ -10,10 +10,10 @@ export class Context<T> implements IContext<T> {
     ) {}
 
     get<K extends keyof T>(key: K): T[K] {
-        return this.testContextRegistry.get(key, this);
+        return this.testContextRegistry.get(key);
     }
 
     set<K extends keyof T>(key: K, value: T[K]): void {
-        return this.testContextRegistry.set(key, value, this);
+        return this.testContextRegistry.set(key, value);
     }
 }

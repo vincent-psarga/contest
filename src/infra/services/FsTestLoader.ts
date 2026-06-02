@@ -20,12 +20,7 @@ export class FsTestLoader implements ITestLoader {
 
         for (const file of specFiles) {
             const fileSuite = new TestSuite(file);
-            this.testRegistry.beginSuite(fileSuite);
-            try {
-                await import(file);
-            } finally {
-                this.testRegistry.endSuite();
-            }
+            await this.testRegistry.registerTestFile(fileSuite, () => import(file));
             this.eventBus.emit(ContestEvents.TestFileLoaded, { testFile: { path: file } });
             fileSuites.push(fileSuite);
         }
