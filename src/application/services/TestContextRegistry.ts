@@ -40,18 +40,18 @@ export class TestContextRegistry implements ITestContextRegistry {
         this.currentContextStorage = null;
     }
 
-    get<K, V, T>(key: K, context: IContext<T>): V {
+    get<T, K extends keyof T>(key: K, context: IContext<T>): T[K] {
         if (this.currentContextStorage === null) {
             throw new Error('Get called outside of test loop')
         }
 
-        const value: null | V = this.currentContextStorage.reduce((acc, context) => {
+        const value: null | T[K] = this.currentContextStorage.reduce((acc, context) => {
             try {
-                return (context as ContextStorage<T>).get(key as keyof T) as V;
+                return (context as ContextStorage<T>).get(key as keyof T) as T[K];
             } catch {
                 return acc;
             }
-        }, null as null | V);
+        }, null as null | T[K]);
 
         if (value === null) {
             throw new ContextNotSetError(String(key));
@@ -59,7 +59,7 @@ export class TestContextRegistry implements ITestContextRegistry {
         return value;
     }
 
-    set<K, V, T>(key: K, value: V, context: IContext<T>): void {
+    set<T, K extends keyof T>(key: K, value: T[K], context: IContext<T>): void {
         const testSuite = this.getCurrentTestSuite();
         if (!testSuite) {
             throw new CurrentTestSuiteNotFound()
