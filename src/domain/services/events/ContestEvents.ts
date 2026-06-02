@@ -12,6 +12,8 @@ export enum ContestEvents {
     TestEnded = 'TestEnded',
     TestSuiteStarted = 'TestSuiteStarted',
     TestSuiteEnded = 'TestSuiteEnded',
+    TestRunStarted = 'TestRunStarted',
+    TestRunEnded = 'TestRunEnded',
 }
 
 type EventPayloadMap<E extends string> = {
@@ -27,6 +29,8 @@ const payloadByEvent = {
     [ContestEvents.TestEnded]: {} as { test: ITest, status: TestStatus },
     [ContestEvents.TestSuiteStarted]: {} as { testSuite: ITestSuite },
     [ContestEvents.TestSuiteEnded]: {} as { testSuite: ITestSuite, status: TestSuiteStatus },
+    [ContestEvents.TestRunStarted]: {},
+    [ContestEvents.TestRunEnded]: {} as {status: TestSuiteStatus},
 } satisfies EventPayloadMap<ContestEvents>;
 
 export type PayloadByEvent = typeof payloadByEvent;

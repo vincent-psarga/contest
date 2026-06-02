@@ -1,8 +1,7 @@
-import { FsTestLoader } from "./infra/services/FsTestLoader";
+import {FsTestLoader} from "./infra/services/FsTestLoader";
 import type {IEventBus} from "./domain/services/events/IEventBus";
 import {EventBus} from "./application/services/events/EventBus";
 import type {ITestLoader} from "./domain/services/ITestLoader";
-import {DebugListener} from "./application/services/events/DebugListener";
 import type {ITestRegistry} from "./domain/services/ITestRegistry";
 import {TestRegistry} from "./application/services/TestRegistry";
 import {Hooks, type ITestSuite} from "./domain/models/ITestSuite";
@@ -14,6 +13,8 @@ import {Context} from "./application/dsl/Context";
 import type {ITestContextRegistry} from "./domain/services/ITestContextRegistry";
 import {TestContextRegistry} from "./application/services/TestContextRegistry";
 import * as path from "node:path";
+import {ContestEvents} from "./domain/services/events/ContestEvents";
+import {DotReporter} from "./application/services/reporters/DotReporter";
 
 type ContestOptions = {
     testLoader: ITestLoader;
@@ -42,15 +43,18 @@ export class Contest {
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
         this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry);
 
-        this.eventBus.addListener(new DebugListener());
+        this.eventBus.addListener(new DotReporter());
     }
 
     async run(p?: string) {
         const cwd = process.cwd();
         const testPath = p ? path.join(cwd, p) : cwd;
 
+        this.eventBus.emit(ContestEvents.TestRunStarted, {})
         await this.testLoader.load(testPath);
-        return this.testRunner.runTestSuites(this.testRegistry.testSuites);
+        const status = await this.testRunner.runTestSuites(this.testRegistry.testSuites);
+        this.eventBus.emit(ContestEvents.TestRunEnded, {status: status});
+        return status;
     }
 
     getContext<T>(testSuite: ITestSuite): Context<T> {
