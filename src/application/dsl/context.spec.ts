@@ -38,5 +38,19 @@ describe<{name: string}>('context', (context) => {
                 expect(firstMock).not.toHaveBeenCalled();
             })
         })
-    })
+    });
+
+    describe('using context.when', () => {
+        context.when({name: 'Coucou'}, () => {
+            it('properly sets the context', () => {
+                expect(context.get('name')).toEqual('Coucou');
+            })
+        });
+
+        context.when('using a titled context.when', {name: 'Coucou'}, () => {
+            it('properly sets the context', () => {
+                expect(context.get('name')).toEqual('Coucou');
+            })
+        });
+    });
 })

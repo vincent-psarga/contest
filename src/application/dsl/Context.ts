@@ -1,6 +1,14 @@
 import type {IContext} from "../../domain/models/IContext";
 import { v4 as uuidv4 } from "uuid";
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
+import {describe} from "./describe";
+
+type SimpleWhenArgs<T> = [context: Partial<T>, callback: () => void]
+type WithTitleWhenArgs<T> = [description: string, context: Partial<T>, callback: () => void]
+
+type WhenArgs<T> =
+    | WithTitleWhenArgs<T>
+    | SimpleWhenArgs<T>;
 
 export class Context<T> implements IContext<T> {
     public readonly id = uuidv4()
@@ -16,4 +24,41 @@ export class Context<T> implements IContext<T> {
     set<K extends keyof T>(key: K, value: T[K]): void {
         return this.testContextRegistry.set(key, value);
     }
+
+    when(...args: WhenArgs<T>) {
+        const { description, context, callback} = this.getWhenParameters(...args);
+
+        describe<T>(description, (ctx) => {
+            for (const [k, v] of Object.entries(context)) {
+                ctx.set(k as keyof T, v);
+            }
+
+            callback();
+        })
+    }
+
+    private getWhenParameters(...args: WhenArgs<T>): {
+        description: string,
+        context: Partial<T>,
+        callback: () => void
+    } {
+        if (isWithTitleWhenArgs(args)) {
+            const [description, context, callback] = args;
+            return { description, context, callback };
+        }
+
+        const [context, callback] = args;
+
+        const description = `when ${
+            Object.entries(context)
+                .map(([k, v]) => `${k}=${v}`)
+                .join(', ')
+        }`;
+
+        return { description, context, callback };
+    }
+}
+
+function isWithTitleWhenArgs<T>(tbd: WhenArgs<T>): tbd is WithTitleWhenArgs<T> {
+    return typeof tbd[0] === 'string';
 }

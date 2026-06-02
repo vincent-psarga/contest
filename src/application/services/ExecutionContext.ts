@@ -25,4 +25,8 @@ export class ExecutionContext<T> implements IContext<T> {
     set<K extends keyof T>(key: K, value: Callbackable<T[K]>): void {
         throw new ContextSetInTestLoop()
     }
+
+    when() {
+        throw new Error('When can not be used on ExecutionContext')
+    }
 }
