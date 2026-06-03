@@ -1,10 +1,19 @@
-import {NoOpListener} from "../events/NoOpListener";
 import {ContestEvents, type PayloadByEvent} from "../../../domain/services/events/ContestEvents";
 import {StatusEnum} from "../../../domain/models/TestStatus";
 import {AbstractReporter} from "./AbstractReporter";
 
 export class TreeReporter extends AbstractReporter {
     private indentation = 0;
+
+    onTestFileStarted(payload: PayloadByEvent[ContestEvents.TestFileStarted]) {
+        console.log(`${this.indent()} ${payload.testFile.path}`)
+        this.indentation++
+    }
+
+    onTestFileEnded(): void {
+        console.log('')
+        this.indentation--
+    }
 
     onTestSuiteStarted(payload: PayloadByEvent[ContestEvents.TestSuiteStarted]): void {
         console.log(`${this.indent()} ${payload.testSuite.name}`)

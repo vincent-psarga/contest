@@ -31,7 +31,7 @@ describe('TestRegistry', () => {
             })
 
             it('adds the testSuite at the root level', () => {
-                assert.deepEqual(testRegistry.testSuites, [testSuite]);
+                assert.deepEqual(testRegistry.testContainers, [testSuite]);
             })
         });
 
@@ -43,7 +43,7 @@ describe('TestRegistry', () => {
             });
 
             it('stores the subSuite inside the mother one', () => {
-                assert.deepEqual(testRegistry.testSuites[0]?.testSuites, [subTestSuite]);
+                assert.deepEqual(testRegistry.testContainers[0]?.testContainers, [subTestSuite]);
             })
         });
     })

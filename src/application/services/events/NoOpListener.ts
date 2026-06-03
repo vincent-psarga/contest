@@ -31,4 +31,10 @@ export class NoOpListener implements IEventListener {
 
     onTestRunEnded(payload: PayloadByEvent[ContestEvents.TestRunEnded]) {
     }
+
+    onTestFileStarted(payload: PayloadByEvent[ContestEvents.TestFileStarted]): void {
+    }
+
+    onTestFileEnded(payload: PayloadByEvent[ContestEvents.TestFileEnded]): void {
+    }
 }

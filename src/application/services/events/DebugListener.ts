@@ -7,7 +7,7 @@ export class DebugListener implements IEventListener {
     }
 
     onTestSuiteLoaded(payload: PayloadByEvent[ContestEvents.TestSuiteLoaded]) {
-        console.log(`Loaded test suite: ${payload.testSuite.name} (in ${payload.container?.name ?? 'registry root'})`)
+        console.log(`Loaded test suite: ${payload.testSuite.name} (in ${JSON.stringify(payload.container)})`)
     }
 
     onHookRegistered(payload: PayloadByEvent[ContestEvents.HookRegistered]) {
@@ -40,5 +40,13 @@ export class DebugListener implements IEventListener {
 
     onTestRunEnded(payload: PayloadByEvent[ContestEvents.TestRunEnded]) {
         console.log(`Ended test run with status ${JSON.stringify(payload.status)}`)
+    }
+
+    onTestFileStarted(payload: PayloadByEvent[ContestEvents.TestFileStarted]): void {
+        console.log(`Started test file: ${ payload.testFile.path }`)
+    }
+
+    onTestFileEnded(payload: PayloadByEvent[ContestEvents.TestFileEnded]): void {
+        console.log(`Ended test file: ${ payload.testFile.path } with status ${JSON.stringify(payload.status)}`)
     }
 }

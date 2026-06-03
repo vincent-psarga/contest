@@ -6,6 +6,8 @@ import {TestSuite} from "../../application/models/TestSuite";
 import type {IEventBus} from "../../domain/services/events/IEventBus";
 import {ContestEvents} from "../../domain/services/events/ContestEvents";
 import type {ITestRegistry} from "../../domain/services/ITestRegistry";
+import type {ITestFile} from "../../domain/models/ITestFile";
+import {TestFile} from "../../application/models/TestFile";
 
 export class FsTestLoader implements ITestLoader {
     constructor(
@@ -14,18 +16,18 @@ export class FsTestLoader implements ITestLoader {
         private readonly extMatcher = ".spec.ts"
     ) {}
 
-    async load(workingDirectory: string): Promise<ITestSuite[]> {
+    async load(workingDirectory: string) {
         const specFiles = this.findSpecFiles(workingDirectory);
-        const fileSuites: ITestSuite[] = [];
+        const testFileSuites: ITestFile[] = [];
 
         for (const file of specFiles) {
-            const fileSuite = new TestSuite(file);
-            await this.testRegistry.registerTestFile(fileSuite, () => import(file));
-            this.eventBus.emit(ContestEvents.TestFileLoaded, { testFile: { path: file } });
-            fileSuites.push(fileSuite);
+            const testFile = new TestFile(file);
+            await this.testRegistry.registerTestFile(testFile, () => import(file));
+            this.eventBus.emit(ContestEvents.TestFileLoaded, { testFile });
+            testFileSuites.push(testFile);
         }
 
-        return fileSuites;
+        return testFileSuites;
     }
 
     private findSpecFiles(dir: string): string[] {

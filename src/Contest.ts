@@ -14,7 +14,6 @@ import type {ITestContextRegistry} from "./domain/services/ITestContextRegistry"
 import {TestContextRegistry} from "./application/services/TestContextRegistry";
 import * as path from "node:path";
 import {ContestEvents} from "./domain/services/events/ContestEvents";
-import {DotReporter} from "./application/services/reporters/DotReporter";
 import {TreeReporter} from "./application/services/reporters/TreeReporter";
 
 type ContestOptions = {
@@ -39,7 +38,7 @@ export class Contest {
         this.eventBus = opts?.eventBus ?? new EventBus();
         this.testRegistry = opts?.testRegistry ?? new TestRegistry(this.eventBus);
         this.testContextRegistry = opts?.testContextRegistry ?? new TestContextRegistry(
-            () => this.testRegistry.currentTestSuite
+            () => this.testRegistry.currentTestContainer
         );
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
         this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry);
@@ -53,7 +52,7 @@ export class Contest {
 
         this.eventBus.emit(ContestEvents.TestRunStarted, {})
         await this.testLoader.load(testPath);
-        const status = await this.testRunner.runTestSuites(this.testRegistry.testSuites);
+        const status = await this.testRunner.runTestContainers(this.testRegistry.testContainers);
         this.eventBus.emit(ContestEvents.TestRunEnded, {status: status});
         return status;
     }

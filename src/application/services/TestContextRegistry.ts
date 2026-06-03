@@ -1,37 +1,38 @@
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 import {Context} from "../dsl/Context";
-import type {ITestSuite} from "../../domain/models/ITestSuite";
+import {isITestSuite, type ITestSuite} from "../../domain/models/ITestSuite";
 import type {Callbackable} from "../../domain/models/IContext";
 import {CurrentTestSuiteNotFound} from "../../domain/errors/CurrentTestSuiteNotFound";
 import {ContextStorage} from "./ContextStorage";
 import {ExecutionContext} from "./ExecutionContext";
+import type {ITestContainer} from "../../domain/models/ITestContainer";
 
 export class TestContextRegistry implements ITestContextRegistry {
-    private readonly contextByTestSuiteId = new Map<string, Context<unknown>>();
-    private readonly contextStorageByTestSuite = new Map<string, ContextStorage<unknown>>();
+    private readonly contextByTestContainerId = new Map<string, Context<unknown>>();
+    private readonly contextStorageByTestContainerId = new Map<string, ContextStorage<unknown>>();
 
     private currentExecutionContext: ExecutionContext<unknown> | null = null;
 
     constructor(
-        private readonly getCurrentTestSuite: () => ITestSuite | null
+        private readonly getCurrentTestContainer: () => ITestContainer | null
     ) {}
 
-    getContext<T>(testSuiteId: ITestSuite['id']): Context<T> {
-        let cachedContext = this.contextByTestSuiteId.get(testSuiteId);
+    getContext<T>(testContainerId: ITestContainer['id']): Context<T> {
+        let cachedContext = this.contextByTestContainerId.get(testContainerId);
         if (cachedContext) {
             return cachedContext as Context<T>;
         }
 
         const context = new Context<T>(this);
-        this.contextByTestSuiteId.set(testSuiteId, context);
+        this.contextByTestContainerId.set(testContainerId, context);
         return context;
     }
 
-    async withAncestors(ancestors: ITestSuite[], callback: () => Promise<void>) {
+    async withAncestors(ancestors: ITestContainer[], callback: () => Promise<void>) {
         try {
             this.currentExecutionContext = new ExecutionContext(
                 ancestors.reduce((acc, testSuite) => {
-                    const storage = this.contextStorageByTestSuite.get(testSuite.id);
+                    const storage = this.contextStorageByTestContainerId.get(testSuite.id);
                     if (storage) {
                         acc.push(storage);
                     }
@@ -53,16 +54,16 @@ export class TestContextRegistry implements ITestContextRegistry {
     }
 
     set<T, K extends keyof T>(key: K, value: T[K]): void {
-        const testSuite = this.getCurrentTestSuite();
-        if (!testSuite) {
+        const testSuite = this.getCurrentTestContainer();
+        if (!testSuite || !isITestSuite(testSuite)) {
             throw new CurrentTestSuiteNotFound()
         }
 
-        const storage = (this.contextStorageByTestSuite.get(testSuite.id) ?? new ContextStorage()) as ContextStorage<T>;
+        const storage = (this.contextStorageByTestContainerId.get(testSuite.id) ?? new ContextStorage()) as ContextStorage<T>;
         storage.set(key as keyof T, value as Callbackable<T[K]>);
-        this.contextStorageByTestSuite.set(
+        this.contextStorageByTestContainerId.set(
             testSuite.id,
-            storage,
+            storage as ContextStorage<unknown>,
         )
     }
 

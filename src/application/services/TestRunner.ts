@@ -1,11 +1,13 @@
 import type {ITestRunner} from "../../domain/services/ITestRunner";
 import type {ITest} from "../../domain/models/ITest";
-import type {ITestSuite} from "../../domain/models/ITestSuite";
+import {isITestSuite} from "../../domain/models/ITestSuite";
 import type {IEventBus} from "../../domain/services/events/IEventBus";
 import {ContestEvents} from "../../domain/services/events/ContestEvents";
 import {StatusEnum, type TestStatus} from "../../domain/models/TestStatus";
 import type {TestSuiteStatus} from "../../domain/models/TestSuiteStatus";
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
+import type {ITestContainer} from "../../domain/models/ITestContainer";
+import {isITestFile} from "../../domain/models/ITestFile";
 
 export class TestRunner implements ITestRunner {
     constructor(
@@ -13,14 +15,14 @@ export class TestRunner implements ITestRunner {
         private readonly testContextRegistry: ITestContextRegistry,
     ) {}
 
-    async runTest(test: ITest, ancestors: ITestSuite[]) {
+    async runTest(test: ITest, ancestors: ITestContainer[]) {
         this.eventBus.emit(ContestEvents.TestStarted, { test })
         let status: TestStatus;
 
         try {
             await this.testContextRegistry.withAncestors(ancestors, async() => {
                 for (const ancestor of ancestors) {
-                    if (ancestor.hooks?.beforeEach) {
+                    if (isITestSuite(ancestor) && ancestor.hooks?.beforeEach) {
                         await ancestor.hooks.beforeEach();
                     }
                 }
@@ -40,30 +42,28 @@ export class TestRunner implements ITestRunner {
         return status;
     }
 
-    async runTestSuite(testSuite: ITestSuite, ancestors: ITestSuite[]) {
-        this.eventBus.emit(ContestEvents.TestSuiteStarted, { testSuite })
+    async runTestContainer(testContainer: ITestContainer, ancestors: ITestContainer[]) {
+        this.emitContainerStartEvent(testContainer);
         let status: TestSuiteStatus | undefined = undefined;
-
-        for (const subSuite of testSuite.testSuites) {
-            status = this.updateTestSuiteStatus(status, await this.runTestSuite(subSuite, [...ancestors, testSuite]));
+        for (const subSuite of testContainer.testContainers) {
+            status = this.updateTestSuiteStatus(status, await this.runTestContainer(subSuite, [...ancestors, testContainer]));
         }
 
-        for (const test of testSuite.tests) {
-            status = this.updateTestSuiteStatus(status, await this.runTest(test, [...ancestors, testSuite]));
+        for (const test of testContainer.tests) {
+            status = this.updateTestSuiteStatus(status, await this.runTest(test, [...ancestors, testContainer]));
         }
 
         status ??= { status: StatusEnum.notRun }
 
-        this.eventBus.emit(ContestEvents.TestSuiteEnded, { testSuite, status});
-
+        this.emitContainerEndEvent(testContainer, status);
         return status;
     }
 
-    async runTestSuites<T>(testSuites: ITestSuite[]) {
+    async runTestContainers<T>(testContainers: ITestContainer[]) {
         let status: TestSuiteStatus | undefined = undefined;
 
-        for (const testSuite of testSuites) {
-            status = this.updateTestSuiteStatus(status, await this.runTestSuite(testSuite, []));
+        for (const testSuite of testContainers) {
+            status = this.updateTestSuiteStatus(status, await this.runTestContainer(testSuite, []));
         }
 
         return status ?? { status: StatusEnum.notRun };
@@ -92,6 +92,26 @@ export class TestRunner implements ITestRunner {
         }
 
         return current;
+    }
+
+    private emitContainerStartEvent(testContainer: ITestContainer) {
+        if (isITestSuite(testContainer)) {
+            return this.eventBus.emit(ContestEvents.TestSuiteStarted, { testSuite: testContainer })
+        }
+
+        if (isITestFile(testContainer)) {
+            return this.eventBus.emit(ContestEvents.TestFileStarted, { testFile: testContainer })
+        }
+    }
+
+    private emitContainerEndEvent(testContainer: ITestContainer, status: TestSuiteStatus) {
+        if (isITestSuite(testContainer)) {
+            return this.eventBus.emit(ContestEvents.TestSuiteEnded, {testSuite: testContainer, status});
+        }
+
+        if (isITestFile(testContainer)) {
+            return this.eventBus.emit(ContestEvents.TestFileEnded, { testFile: testContainer, status })
+        }
     }
 }
 

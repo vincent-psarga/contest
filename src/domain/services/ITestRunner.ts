@@ -1,10 +1,10 @@
-import type {ITestSuite} from "../models/ITestSuite";
 import type {ITest} from "../models/ITest";
 import type {TestStatus} from "../models/TestStatus";
 import type {TestSuiteStatus} from "../models/TestSuiteStatus";
+import type {ITestContainer} from "../models/ITestContainer";
 
 export interface ITestRunner {
-    runTestSuites(testSuite: ITestSuite[]): Promise<TestSuiteStatus>;
-    runTestSuite(testSuite: ITestSuite, ancestors: ITestSuite[]): Promise<TestSuiteStatus>;
-    runTest(test: ITest, ancestors: ITestSuite[]): Promise<TestStatus>;
+    runTestContainers(testContainers: ITestContainer[]): Promise<TestSuiteStatus>;
+    runTestContainer(testContainer: ITestContainer, ancestors: ITestContainer[]): Promise<TestSuiteStatus>;
+    runTest(test: ITest, ancestors: ITestContainer[]): Promise<TestStatus>;
 }

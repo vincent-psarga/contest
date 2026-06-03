@@ -1,3 +1,5 @@
+import type { ISharedContext } from "./ISharedContext";
+
 export type Callbackable<T> = T | (() => T)
 
 export interface IContext<T> {

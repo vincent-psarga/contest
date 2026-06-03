@@ -1,28 +1,18 @@
 import {Hooks, type ITestSuite} from "../../domain/models/ITestSuite";
-import type {ITest} from "../../domain/models/ITest";
 import type {TestBody} from "../../domain/models/TestBody";
-import { v4 as uuidv4 } from "uuid";
+import {AbstractTestContainer} from "./TestContainer";
 
-export class TestSuite implements ITestSuite {
-    private readonly _testSuites: ITestSuite[] = [];
-    private readonly _tests: ITest[] = [];
+export class TestSuite extends AbstractTestContainer implements ITestSuite {
     private readonly _hooks: Partial<Record<Hooks, TestBody>> = {}
-    public readonly id = uuidv4();
 
     constructor(
         private readonly _name: string
-    ) {}
+    ) {
+        super();
+    }
 
     get name() {
         return this._name;
-    }
-
-    get testSuites() {
-        return this._testSuites;
-    }
-
-    get tests() {
-        return this._tests;
     }
 
     get hooks() {
@@ -31,13 +21,5 @@ export class TestSuite implements ITestSuite {
 
     addHook(hook: Hooks, body: TestBody) {
         this._hooks[hook] = body;
-    }
-
-    addTestSuite(testSuite: ITestSuite): void {
-        this._testSuites.push(testSuite);
-    }
-
-    addTest(test: ITest): void {
-        this._tests.push(test)
     }
 }

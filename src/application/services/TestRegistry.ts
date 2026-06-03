@@ -1,77 +1,79 @@
 import type {ITestRegistry} from "../../domain/services/ITestRegistry";
-import type {Hooks, ITestSuite} from "../../domain/models/ITestSuite";
+import {type Hooks, isITestSuite, type ITestSuite} from "../../domain/models/ITestSuite";
 import type {IEventBus} from "../../domain/services/events/IEventBus";
 import {ContestEvents} from "../../domain/services/events/ContestEvents";
 import type {ITest} from "../../domain/models/ITest";
 import type {TestBody} from "../../domain/models/TestBody";
+import type {ITestContainer} from "../../domain/models/ITestContainer";
+import type {ITestFile} from "../../domain/models/ITestFile";
 
 export class TestRegistry implements ITestRegistry {
-    private readonly _testSuites: ITestSuite[] = [];
-    private readonly _ancestorStack: (ITestSuite | null)[] = [];
-    private _currentTestSuite: ITestSuite | null = null;
+    private readonly _testContainers: ITestContainer[] = [];
+    private readonly _ancestorStack: (ITestContainer | null)[] = [];
+    private _currentTestContainer: ITestContainer | null = null;
 
     constructor(
         private readonly eventBus: IEventBus,
     ) {
     }
 
-    get testSuites() {
-        return this._testSuites;
+    get testContainers() {
+        return this._testContainers;
     }
 
-    get currentTestSuite(): ITestSuite | null {
-        return this._currentTestSuite;
+    get currentTestContainer(): ITestContainer | null {
+        return this._currentTestContainer;
     }
 
-    async registerTestFile(testSuite: ITestSuite, callback: () => Promise<void>): Promise<void> {
-        this.beginSuite(testSuite);
+    async registerTestFile(testFile: ITestFile, callback: () => Promise<void>): Promise<void> {
+        this.beginTestContainer(testFile);
         try {
             await callback();
         } finally {
-            this.endSuite();
+            this.endTestContainer();
         }
     }
 
     registerTestSuite(testSuite: ITestSuite, callback: () => void): void {
-        this.beginSuite(testSuite);
+        this.beginTestContainer(testSuite);
         try {
             callback();
         } finally {
-            this.endSuite();
+            this.endTestContainer();
         }
     }
 
     registerHook(hook: Hooks, body: TestBody): void {
-        if (!this._currentTestSuite) {
+        if (!this._currentTestContainer || !isITestSuite(this._currentTestContainer)) {
             throw new Error(`Unable to register hook ${hook} - no current test suite`);
         }
-        this._currentTestSuite.addHook(hook, body);
-        this.eventBus.emit(ContestEvents.HookRegistered, { hook, testSuite: this._currentTestSuite });
+        this._currentTestContainer.addHook(hook, body);
+        this.eventBus.emit(ContestEvents.HookRegistered, { hook, testSuite: this._currentTestContainer });
     }
 
     registerTest(test: ITest): void {
-        if (!this._currentTestSuite) {
+        if (!this._currentTestContainer) {
             throw new Error(`Unable to register test "${test.name} - no current test suite`)
         }
-        this._currentTestSuite.addTest(test);
+        this._currentTestContainer.addTest(test);
     }
 
-    private beginSuite(testSuite: ITestSuite): void {
-        const previous = this._currentTestSuite;
+    private beginTestContainer(testContainer: ITestContainer): void {
+        const previous = this._currentTestContainer;
         if (previous === null) {
-            this._testSuites.push(testSuite);
+            this._testContainers.push(testContainer);
         } else {
-            previous.addTestSuite(testSuite);
+            previous.addTestContainer(testContainer);
         }
         this._ancestorStack.push(previous);
-        this._currentTestSuite = testSuite;
+        this._currentTestContainer = testContainer;
     }
 
-    private endSuite(): void {
-        const ending = this._currentTestSuite;
+    private endTestContainer(): void {
+        const ending = this._currentTestContainer;
         const previous = this._ancestorStack.pop() ?? null;
-        this._currentTestSuite = previous;
-        if (ending) {
+        this._currentTestContainer = previous;
+        if (ending && isITestSuite(ending)) {
             this.eventBus.emit(ContestEvents.TestSuiteLoaded, { testSuite: ending, container: previous });
         }
     }
