@@ -2,6 +2,7 @@ import type {IContext} from "../../domain/models/IContext";
 import { v4 as uuidv4 } from "uuid";
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 import {describe} from "./describe";
+import type { ISharedContext } from "../../domain/models/ISharedContext";
 
 type SimpleWhenArgs<T> = [context: Partial<T>, callback: () => void]
 type WithTitleWhenArgs<T> = [description: string, context: Partial<T>, callback: () => void]
@@ -15,7 +16,8 @@ export class Context<T> implements IContext<T> {
 
     constructor(
         private readonly testContextRegistry: ITestContextRegistry
-    ) {}
+    ) {
+    }
 
     get<K extends keyof T>(key: K): T[K] {
         return this.testContextRegistry.get(key);
@@ -35,6 +37,10 @@ export class Context<T> implements IContext<T> {
 
             callback();
         })
+    }
+
+    with<U>(sharedContext: ISharedContext<U>, tests: (context: IContext<T & U>) => void): void {
+        sharedContext.register(tests);
     }
 
     private getWhenParameters(...args: WhenArgs<T>): {

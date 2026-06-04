@@ -1,6 +1,6 @@
 import {Hooks, type ITestSuite} from "../../domain/models/ITestSuite";
 import type {TestBody} from "../../domain/models/TestBody";
-import {AbstractTestContainer} from "./TestContainer";
+import {AbstractTestContainer} from "./AbstractTestContainer";
 
 export class TestSuite extends AbstractTestContainer implements ITestSuite {
     private readonly _hooks: Partial<Record<Hooks, TestBody>> = {}

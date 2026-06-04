@@ -1,4 +1,4 @@
-import {AbstractTestContainer} from "./TestContainer";
+import {AbstractTestContainer} from "./AbstractTestContainer";
 import type {ITestFile} from "../../domain/models/ITestFile";
 
 export class TestFile extends AbstractTestContainer implements ITestFile {

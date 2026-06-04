@@ -15,6 +15,9 @@ import {TestContextRegistry} from "./application/services/TestContextRegistry";
 import * as path from "node:path";
 import {ContestEvents} from "./domain/services/events/ContestEvents";
 import {TreeReporter} from "./application/services/reporters/TreeReporter";
+import type {ISharedContext} from "./domain/models/ISharedContext";
+import type {IContext} from "./domain/models/IContext";
+import type {ITestContainer} from "./domain/models/ITestContainer";
 
 type ContestOptions = {
     testLoader: ITestLoader;
@@ -57,8 +60,8 @@ export class Contest {
         return status;
     }
 
-    getContext<T>(testSuite: ITestSuite): Context<T> {
-        return this.testContextRegistry.getContext(testSuite.id);
+    getContext<T>(testContainer: ITestContainer): Context<T> {
+        return this.testContextRegistry.getContext(testContainer.id);
     };
 
     registerTestSuite(testSuite: ITestSuite, callback: () => void): void {
@@ -71,5 +74,9 @@ export class Contest {
 
     registerHook(hook: Hooks, body: TestBody): void {
         this.testRegistry.registerHook(hook, body);
+    }
+
+    registerSharedContext<T, U>(sharedContext: ISharedContext<T>, tests: (context: IContext<T & U>) => void): void {
+        this.testRegistry.registerSharedContext(sharedContext, this.getContext<T & U>(sharedContext), tests);
     }
 }

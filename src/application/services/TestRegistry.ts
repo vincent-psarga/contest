@@ -6,6 +6,8 @@ import type {ITest} from "../../domain/models/ITest";
 import type {TestBody} from "../../domain/models/TestBody";
 import type {ITestContainer} from "../../domain/models/ITestContainer";
 import type {ITestFile} from "../../domain/models/ITestFile";
+import type {ISharedContext} from "../../domain/models/ISharedContext";
+import type {IContext} from "../../domain/models/IContext";
 
 export class TestRegistry implements ITestRegistry {
     private readonly _testContainers: ITestContainer[] = [];
@@ -49,6 +51,13 @@ export class TestRegistry implements ITestRegistry {
         }
         this._currentTestContainer.addHook(hook, body);
         this.eventBus.emit(ContestEvents.HookRegistered, { hook, testSuite: this._currentTestContainer });
+    }
+
+    registerSharedContext<T, U>(sharedContext: ISharedContext<T>, context: IContext<T & U>, tests: (context: IContext<T & U>) => void) {
+        this.beginTestContainer(sharedContext);
+        sharedContext.setup(context);
+        tests(context);
+        this.endTestContainer();
     }
 
     registerTest(test: ITest): void {
