@@ -41,3 +41,9 @@ describe('sharedContext', (context) => {
         expect(getUsername).toThrow(new ContextNotSetError('username'))
     })
 })
+
+describe.with('Using shared context at describe level', userContext, (context) => {
+    it('loads the sharedContext properly', () => {
+        expect(context.get('username')).toEqual('someone@example.com');
+    })
+});

@@ -1,6 +1,7 @@
 import type {IContext} from "../../domain/models/IContext";
 import {Contest} from "../../Contest";
 import {TestSuite} from "../models/TestSuite";
+import type {ISharedContext} from "../../domain/models/ISharedContext";
 
 class Describe<T> {
     constructor(
@@ -20,6 +21,19 @@ class Describe<T> {
     }
 }
 
-export function describe<T>(description: string, content: (context: IContext<T>) => void) {
-    new Describe<T>(description, content).register();
-}
+export const describe = Object.assign(
+    <T>(description: string, content: (context: IContext<T>) => void) => {
+        new Describe<T>(description, content).register();
+    },
+    {
+        with: <T>(description: string, sharedContext: ISharedContext<T>, tests: (context: IContext<T>) => void) => {
+            new Describe<T>(
+                description,
+                (context) => {
+                    sharedContext.setup(context);
+                    tests(context);
+                }
+            ).register();
+        }
+    }
+);
