@@ -1,6 +1,7 @@
 import {Hooks, type ITestSuite} from "../../domain/models/ITestSuite";
 import type {TestBody} from "../../domain/models/TestBody";
 import {AbstractTestContainer} from "./AbstractTestContainer";
+import {TestContainerType} from "../../domain/models/ITestContainer";
 
 export class TestSuite extends AbstractTestContainer implements ITestSuite {
     private readonly _hooks: Partial<Record<Hooks, TestBody>> = {}
@@ -9,6 +10,10 @@ export class TestSuite extends AbstractTestContainer implements ITestSuite {
         private readonly _name: string
     ) {
         super();
+    }
+
+    get type(): TestContainerType.TestSuite {
+        return TestContainerType.TestSuite;
     }
 
     get name() {

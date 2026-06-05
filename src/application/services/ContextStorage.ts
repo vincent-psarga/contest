@@ -35,8 +35,13 @@ export class ContextStorage<T> implements IContext<T> {
     }
 
     when() {
-        throw new Error('When can not be used on ContextStorage')
+        throw new Error('when() can not be used on ContextStorage')
     }
+
+    with() {
+        throw new Error('with() can not be used on ContextStorage')
+    }
+
 
     get keys(): (keyof T) [] {
         return this._keys;

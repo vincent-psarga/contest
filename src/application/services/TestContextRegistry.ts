@@ -1,6 +1,6 @@
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 import {Context} from "../dsl/Context";
-import {isITestSuite, type ITestSuite} from "../../domain/models/ITestSuite";
+import {isITestSuite} from "../../domain/models/ITestSuite";
 import type {Callbackable} from "../../domain/models/IContext";
 import {CurrentTestSuiteNotFound} from "../../domain/errors/CurrentTestSuiteNotFound";
 import {ContextStorage} from "./ContextStorage";
@@ -54,15 +54,15 @@ export class TestContextRegistry implements ITestContextRegistry {
     }
 
     set<T, K extends keyof T>(key: K, value: T[K]): void {
-        const testSuite = this.getCurrentTestContainer();
-        if (!testSuite || !isITestSuite(testSuite)) {
+        const testContainer = this.getCurrentTestContainer();
+        if (!testContainer) {
             throw new CurrentTestSuiteNotFound()
         }
 
-        const storage = (this.contextStorageByTestContainerId.get(testSuite.id) ?? new ContextStorage()) as ContextStorage<T>;
+        const storage = (this.contextStorageByTestContainerId.get(testContainer.id) ?? new ContextStorage()) as ContextStorage<T>;
         storage.set(key as keyof T, value as Callbackable<T[K]>);
         this.contextStorageByTestContainerId.set(
-            testSuite.id,
+            testContainer.id,
             storage as ContextStorage<unknown>,
         )
     }

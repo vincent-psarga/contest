@@ -27,6 +27,10 @@ export class ExecutionContext<T> implements IContext<T> {
     }
 
     when() {
-        throw new Error('When can not be used on ExecutionContext')
+        throw new Error('when() can not be used on ExecutionContext')
+    }
+
+    with() {
+        throw new Error('with() can not be used on ExecutionContext')
     }
 }
