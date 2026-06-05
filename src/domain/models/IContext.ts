@@ -1,11 +1,8 @@
-import type { ISharedContext } from "./ISharedContext";
+import type {ISharedContext} from "./ISharedContext";
+import type {IStorage} from "./IStorage";
 
-export type Callbackable<T> = T | (() => T)
-
-export interface IContext<T> {
+export interface IContext<T> extends IStorage<T> {
     id: string;
-    get<K extends keyof T>(key: K): T[K];
-    set<K extends keyof T>(key: K, value: Callbackable<T[K]>): void;
     when(ctx: Partial<T>, callback: () => void): void;
     when(description: string, ctx: Partial<T>, callback: () => void): void;
     with<U>(sharedContext: ISharedContext<U>, tests: (context: IContext<T & U>) => void): void;

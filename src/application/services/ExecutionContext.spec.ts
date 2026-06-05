@@ -1,4 +1,3 @@
-import {ContextStorage} from "./ContextStorage";
 import {describe} from "../dsl/describe";
 import {it} from "../dsl/it";
 import {jestExpect as expect} from "@jest/expect";
@@ -7,17 +6,19 @@ import {beforeEach} from "../dsl/beforeEach";
 import {ContextNotSetError} from "../../domain/errors/ContextNotSetError";
 import {fn} from "jest-mock";
 import {ExecutionContext} from "./ExecutionContext";
+import type {IStorage} from "../../domain/models/IStorage";
+import {Storage} from "../utils/Storage";
 
 type SampleContext = { name: string }
 
 describe<{
-    contextStorages: ContextStorage<SampleContext>[]
+    storages: Storage<SampleContext>[]
 }>('ExecutionContext', (context) => {
-    let executionContext: ExecutionContext<SampleContext>;
-    context.set('contextStorages', []);
+    let executionContext: IStorage<SampleContext>;
+    context.set('storages', []);
 
     beforeEach(() => {
-        executionContext = new ExecutionContext<SampleContext>(context.get('contextStorages'))
+        executionContext = new ExecutionContext<SampleContext>(context.get('storages'))
     })
 
     describe('set', () => {
@@ -28,8 +29,8 @@ describe<{
 
     describe('get', () => {
         describe('when the key is not set in the provided ContextStorage', () => {
-            context.set('contextStorages', [
-                new ContextStorage()
+            context.set('storages', [
+                new Storage()
             ]);
 
             it('throws a ContextNotSetError', () => {
@@ -39,8 +40,8 @@ describe<{
 
 
         describe('when the key is not set in the provided ContextStorage', () => {
-            context.set('contextStorages', () => {
-                const storage = new ContextStorage<SampleContext>();
+            context.set('storages', () => {
+                const storage = new Storage<SampleContext>();
                 storage.set('name', 'some value');
                 return [storage]
             });
@@ -53,9 +54,9 @@ describe<{
                 const firstMock = fn<() => string>().mockReturnValue('first-mock');
                 const secondMock = fn<() => string>().mockReturnValue('second-mock');
 
-                context.set('contextStorages', () => {
-                    const firstStorage = new ContextStorage<SampleContext>();
-                    const secondStorage = new ContextStorage<SampleContext>();
+                context.set('storages', () => {
+                    const firstStorage = new Storage<SampleContext>();
+                    const secondStorage = new Storage<SampleContext>();
 
                     firstStorage.set('name', firstMock);
                     secondStorage.set('name', secondMock);

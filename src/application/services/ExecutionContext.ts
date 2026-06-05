@@ -1,16 +1,17 @@
-import type {Callbackable, IContext} from "../../domain/models/IContext";
 import {v4 as uuidv4} from "uuid";
-import {ContextStorage} from "./ContextStorage";
 import {ContextSetInTestLoop} from "../../domain/errors/ContextSetInTestLoop";
+import type { IStorage } from "../../domain/models/IStorage";
 
-export class ExecutionContext<T> implements IContext<T> {
+import {Storage} from "../utils/Storage";
+
+export class ExecutionContext<T> implements IStorage<T> {
     public readonly id = uuidv4();
-    private readonly contextStorage: ContextStorage<T>;
+    private readonly contextStorage: Storage<T>;
 
     constructor(
-        contextStorages: ContextStorage<T>[]
+        contextStorages: Storage<T>[]
     ) {
-        this.contextStorage = new ContextStorage<T>();
+        this.contextStorage = new Storage<T>();
         for (const storage of contextStorages) {
             for (const key of storage.keys) {
                 this.contextStorage.set(key, () => storage.get(key));
@@ -22,15 +23,7 @@ export class ExecutionContext<T> implements IContext<T> {
         return this.contextStorage.get(key);
     }
 
-    set<K extends keyof T>(key: K, value: Callbackable<T[K]>): void {
+    set(): void {
         throw new ContextSetInTestLoop()
-    }
-
-    when() {
-        throw new Error('when() can not be used on ExecutionContext')
-    }
-
-    with() {
-        throw new Error('with() can not be used on ExecutionContext')
     }
 }

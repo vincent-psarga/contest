@@ -1,15 +1,14 @@
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 import {Context} from "../dsl/Context";
-import {isITestSuite} from "../../domain/models/ITestSuite";
-import type {Callbackable} from "../../domain/models/IContext";
 import {CurrentTestSuiteNotFound} from "../../domain/errors/CurrentTestSuiteNotFound";
-import {ContextStorage} from "./ContextStorage";
 import {ExecutionContext} from "./ExecutionContext";
 import type {ITestContainer} from "../../domain/models/ITestContainer";
+import type {Callbackable} from "../../domain/models/IStorage";
+import {Storage} from "../utils/Storage";
 
 export class TestContextRegistry implements ITestContextRegistry {
     private readonly contextByTestContainerId = new Map<string, Context<unknown>>();
-    private readonly contextStorageByTestContainerId = new Map<string, ContextStorage<unknown>>();
+    private readonly storageByTestContainerId = new Map<string, Storage<unknown>>();
 
     private currentExecutionContext: ExecutionContext<unknown> | null = null;
 
@@ -32,12 +31,12 @@ export class TestContextRegistry implements ITestContextRegistry {
         try {
             this.currentExecutionContext = new ExecutionContext(
                 ancestors.reduce((acc, testSuite) => {
-                    const storage = this.contextStorageByTestContainerId.get(testSuite.id);
+                    const storage = this.storageByTestContainerId.get(testSuite.id);
                     if (storage) {
                         acc.push(storage);
                     }
                     return acc;
-                }, [] as ContextStorage<unknown>[]));
+                }, [] as Storage<unknown>[]));
 
             await callback();
         } finally {
@@ -59,11 +58,11 @@ export class TestContextRegistry implements ITestContextRegistry {
             throw new CurrentTestSuiteNotFound()
         }
 
-        const storage = (this.contextStorageByTestContainerId.get(testContainer.id) ?? new ContextStorage()) as ContextStorage<T>;
+        const storage = (this.storageByTestContainerId.get(testContainer.id) ?? new Storage()) as Storage<T>;
         storage.set(key as keyof T, value as Callbackable<T[K]>);
-        this.contextStorageByTestContainerId.set(
+        this.storageByTestContainerId.set(
             testContainer.id,
-            storage as ContextStorage<unknown>,
+            storage as Storage<unknown>,
         )
     }
 

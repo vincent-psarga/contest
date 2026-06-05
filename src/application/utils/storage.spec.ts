@@ -1,37 +1,37 @@
 import {describe} from "../dsl/describe";
-import {it} from "../dsl/it";
 import {beforeEach} from "../dsl/beforeEach";
+import {it} from "../dsl/it";
 import {jestExpect as expect} from "@jest/expect";
 import {ContextNotSetError} from "../../domain/errors/ContextNotSetError";
-import {fn, type Mock} from 'jest-mock'
-import {ContextStorage} from "./ContextStorage";
+import {fn, type Mock} from "jest-mock";
+import {Storage} from "./Storage";
 
 type TestContext = {
     name: string,
     falsy: null | undefined | false | {} | []
 }
 
-describe('ContextStorage', () => {
-    let contextStorage: ContextStorage<TestContext>
+describe('Storage', () => {
+    let storage: Storage<TestContext>
 
     beforeEach(() => {
-        contextStorage = new ContextStorage<TestContext>();
+        storage = new Storage<TestContext>();
     });
 
     describe('get', () => {
         describe('when the key is not set', () => {
             it('throws a ContextNotSetError', () => {
-                expect(() => contextStorage.get('name')).toThrow(new ContextNotSetError('name'));
+                expect(() => storage.get('name')).toThrow(new ContextNotSetError('name'));
             });
         });
 
         describe('when the key has been set with a value', () => {
             beforeEach(() => {
-                contextStorage.set('name', 'test-value');
+                storage.set('name', 'test-value');
             })
 
             it('returns the value', () => {
-                expect(contextStorage.get('name')).toEqual('test-value');
+                expect(storage.get('name')).toEqual('test-value');
             });
         });
 
@@ -39,11 +39,11 @@ describe('ContextStorage', () => {
             for (const falsy of [null, undefined, false, [], {}]) {
                 describe(`when the key has been set with ${JSON.stringify(falsy)}`, () => {
                     beforeEach(() => {
-                        contextStorage.set('falsy', falsy);
+                        storage.set('falsy', falsy);
                     });
 
                     it(`returns ${JSON.stringify(falsy)}`, () => {
-                        expect(contextStorage.get('falsy')).toEqual(falsy);
+                        expect(storage.get('falsy')).toEqual(falsy);
                     });
                 });
             }
@@ -55,7 +55,7 @@ describe('ContextStorage', () => {
             beforeEach(() => {
                 callback = fn<() => string>().mockReturnValue('test-value-from-callback');
 
-                contextStorage.set('name', callback);
+                storage.set('name', callback);
             });
 
 
@@ -64,12 +64,12 @@ describe('ContextStorage', () => {
             });
 
             it('returns the value', () => {
-                expect(contextStorage.get('name')).toEqual('test-value-from-callback');
+                expect(storage.get('name')).toEqual('test-value-from-callback');
             });
 
             it('runs the callback only once, no matter how many queries have been done', () => {
-                contextStorage.get('name');
-                contextStorage.get('name');
+                storage.get('name');
+                storage.get('name');
 
                 expect(callback).toHaveBeenCalledTimes(1);
             });
