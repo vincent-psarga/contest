@@ -1,10 +1,12 @@
-import {type ITestContainer, TestContainerType} from "./ITestContainer";
+import {type ITestContainer} from "./ITestContainer";
+import {respondsWith} from "../utils/respondsWith";
 
 export interface ITestFile extends ITestContainer {
-    type: TestContainerType.TestFile;
     path: string;
+
+    isITestFile(): boolean;
 }
 
 export function isITestFile(tbd: ITestContainer): tbd is ITestFile {
-    return tbd.type === TestContainerType.TestFile;
+    return respondsWith(tbd as ITestFile, 'isITestFile', true);
 }

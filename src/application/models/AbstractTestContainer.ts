@@ -1,10 +1,9 @@
-import {type ITestContainer, TestContainerType} from "../../domain/models/ITestContainer";
+import {type ITestContainer} from "../../domain/models/ITestContainer";
 import {v4 as uuidv4} from "uuid";
 import type {ITest} from "../../domain/models/ITest";
 
 export abstract class AbstractTestContainer implements ITestContainer {
     public readonly id = uuidv4();
-    public abstract type: TestContainerType;
 
     private readonly _tests: ITest[] = [];
     private readonly _testContainers: ITestContainer[] = [];

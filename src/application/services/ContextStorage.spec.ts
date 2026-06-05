@@ -7,7 +7,8 @@ import {fn, type Mock} from 'jest-mock'
 import {ContextStorage} from "./ContextStorage";
 
 type TestContext = {
-    name: string
+    name: string,
+    falsy: null | undefined | false | {} | []
 }
 
 describe('ContextStorage', () => {
@@ -33,6 +34,20 @@ describe('ContextStorage', () => {
                 expect(contextStorage.get('name')).toEqual('test-value');
             });
         });
+
+        describe('when the key has been set with a falsy value', () => {
+            for (const falsy of [null, undefined, false, [], {}]) {
+                describe(`when the key has been set with ${JSON.stringify(falsy)}`, () => {
+                    beforeEach(() => {
+                        contextStorage.set('falsy', falsy);
+                    });
+
+                    it(`returns ${JSON.stringify(falsy)}`, () => {
+                        expect(contextStorage.get('falsy')).toEqual(falsy);
+                    });
+                });
+            }
+        })
 
         describe('when the key has been set with a callback', () => {
             let callback: Mock<() => string>;

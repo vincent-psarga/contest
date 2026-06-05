@@ -2,7 +2,6 @@ import type {ISharedContext} from "../../domain/models/ISharedContext";
 import {AbstractTestContainer} from "./AbstractTestContainer";
 import type {IContext} from "../../domain/models/IContext";
 import {Contest} from "../../Contest";
-import {TestContainerType} from "../../domain/models/ITestContainer";
 
 export class SharedContext<T> extends AbstractTestContainer implements ISharedContext<T> {
     constructor(
@@ -13,10 +12,9 @@ export class SharedContext<T> extends AbstractTestContainer implements ISharedCo
         super();
     }
 
-    get type(): TestContainerType.SharedContext {
-        return TestContainerType.SharedContext;
+    isISharedContext(){
+        return true;
     }
-
     get name() {
         return this._name;
     }

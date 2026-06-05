@@ -53,9 +53,9 @@ export class TestRegistry implements ITestRegistry {
         this.eventBus.emit(ContestEvents.HookRegistered, { hook, testSuite: this._currentTestContainer });
     }
 
-    registerSharedContext<T, U>(sharedContext: ISharedContext<T>, context: IContext<T & U>, tests: (context: IContext<T & U>) => void) {
+    registerSharedContext<S, C>(sharedContext: ISharedContext<S>, context: IContext<C>, tests: (context: IContext<C>) => void): void {
         this.beginTestContainer(sharedContext);
-        sharedContext.setup(context);
+        sharedContext.setup(context as unknown as IContext<S>);
         tests(context);
         this.endTestContainer();
     }

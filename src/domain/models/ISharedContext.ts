@@ -1,13 +1,14 @@
 import type {IContext} from "./IContext";
-import {type ITestContainer, TestContainerType} from "./ITestContainer";
+import {type ITestContainer} from "./ITestContainer";
+import {respondsWith} from "../utils/respondsWith";
 
 export interface ISharedContext<T> extends ITestContainer {
-    type: TestContainerType.SharedContext;
     name: string;
     setup: (context: IContext<T>) => void,
     register<U>(tests: (context: IContext<T & U>) => void): void
+    isISharedContext(): boolean
 }
 
 export function isISharedContext<T>(tbd: ITestContainer): tbd is ISharedContext<T> {
-    return tbd.type === TestContainerType.SharedContext;
+    return respondsWith(tbd as ISharedContext<T>, 'isISharedContext', true);
 }

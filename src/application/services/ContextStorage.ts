@@ -9,19 +9,22 @@ export class ContextStorage<T> implements IContext<T> {
     private readonly _keys: (keyof T)[] = [];
 
     get<K extends keyof T>(key: K): T[K] {
-        const value = this.storage.get(String(key)) as T[K];
-        if (!value) {
-            const callback = this.callbackStorage.get(String(key));
-            if (!callback) {
-                throw new ContextNotSetError(String(key));
-            }
-
-            const computedValue = callback() as T[K];
-            this.storage.set(String(key), computedValue);
-            return computedValue;
+        if (!this._keys.includes(key)) {
+            throw new ContextNotSetError(String(key));
         }
 
-        return value;
+        if (this.storage.has(String(key))) {
+            return this.storage.get(String(key)) as T[K];
+        }
+
+        const callback = this.callbackStorage.get(String(key));
+        if (!callback) {
+            throw new ContextNotSetError(String(key));
+        }
+
+        const computedValue = callback() as T[K];
+        this.storage.set(String(key), computedValue);
+        return computedValue;
     }
 
     set<K extends keyof T>(key: K, value: Callbackable<T[K]>): void {
