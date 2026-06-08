@@ -34,6 +34,16 @@ export const describe = Object.assign(
                     tests(context);
                 }
             ).register();
+        },
+        withExamples: <E, C>(description: string, examples: E[], tests: (example: E, context: IContext<C>) => void) => {
+            new Describe<C>(
+                description,
+                (context) => {
+                    for (const example of examples) {
+                        tests(example, context);
+                    }
+                }
+            ).register();
         }
     }
 );

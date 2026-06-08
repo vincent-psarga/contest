@@ -11,7 +11,7 @@ type TestContext = {
     falsy: null | undefined | false | {} | []
 }
 
-describe('Storage', () => {
+describe('Storage', (context) => {
     let storage: Storage<TestContext>
 
     beforeEach(() => {
@@ -35,19 +35,18 @@ describe('Storage', () => {
             });
         });
 
-        describe('when the key has been set with a falsy value', () => {
-            for (const falsy of [null, undefined, false, [], {}]) {
-                describe(`when the key has been set with ${JSON.stringify(falsy)}`, () => {
-                    beforeEach(() => {
-                        storage.set('falsy', falsy);
+        describe.withExamples(
+            'when the key has been set with a falsy value',
+            [null, undefined, false, [], {}],
+            (value) => {
+                context.when({'value': value}, () => {
+                    it(`returns ${JSON.stringify(value)}`, () => {
+                        storage.set('falsy', value);
+                        expect(storage.get('falsy')).toEqual(value);
                     });
-
-                    it(`returns ${JSON.stringify(falsy)}`, () => {
-                        expect(storage.get('falsy')).toEqual(falsy);
-                    });
-                });
+                })
             }
-        })
+        )
 
         describe('when the key has been set with a callback', () => {
             let callback: Mock<() => string>;

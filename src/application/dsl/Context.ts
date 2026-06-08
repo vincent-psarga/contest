@@ -57,7 +57,7 @@ export class Context<T> implements IContext<T> {
 
         const description = `when ${
             Object.entries(context)
-                .map(([k, v]) => `${k}=${v}`)
+                .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
                 .join(', ')
         }`;
 
