@@ -14,10 +14,10 @@ import type {ITestContextRegistry} from "./domain/services/ITestContextRegistry"
 import {TestContextRegistry} from "./application/services/TestContextRegistry";
 import * as path from "node:path";
 import {ContestEvents} from "./domain/services/events/ContestEvents";
-import {TreeReporter} from "./application/services/reporters/TreeReporter";
 import type {ISharedContext} from "./domain/models/ISharedContext";
 import type {IContext} from "./domain/models/IContext";
 import type {ITestContainer} from "./domain/models/ITestContainer";
+import type {IEventListener} from "./domain/services/events/IEventListener";
 
 type ContestOptions = {
     testLoader: ITestLoader;
@@ -45,9 +45,11 @@ export class Contest {
         );
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
         this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry);
-
-        this.eventBus.addListener(new TreeReporter());
     }
+
+    addTestReporter(reporter: IEventListener) {
+        this.eventBus.addListener(reporter);
+    };
 
     async run(p?: string) {
         const cwd = process.cwd();
