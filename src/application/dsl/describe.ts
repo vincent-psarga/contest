@@ -4,14 +4,29 @@ import {TestSuite} from "../models/TestSuite";
 import type {ISharedContext} from "../../domain/models/ISharedContext";
 
 class Describe<T> {
+    private readonly description: string
+    private readonly content: (context: IContext<T>) => void
+    private readonly only: boolean
+    private readonly skip: boolean
+    private readonly contest: Contest
+
     constructor(
-        private readonly name: string,
-        private readonly content: (context: IContext<T>) => void,
-        private readonly contest = Contest.instance
-    ) {}
+        options: {
+            description: string,
+            content: (context: IContext<T>) => void,
+            only?: boolean,
+            skip?: boolean,
+        }
+    ) {
+        this.description = options.description;
+        this.content = options.content;
+        this.only = options.only ?? false
+        this.skip = options.skip ?? false
+        this.contest = Contest.instance
+    }
 
     register() {
-        const testSuite = new TestSuite(this.name);
+        const testSuite = new TestSuite(this.description, this.skip, this.only);
         this.contest.registerTestSuite(
             testSuite,
             () => {
@@ -23,27 +38,33 @@ class Describe<T> {
 
 export const describe = Object.assign(
     <T>(description: string, content: (context: IContext<T>) => void) => {
-        new Describe<T>(description, content).register();
+        new Describe<T>({description, content}).register();
     },
     {
         with: <T>(description: string, sharedContext: ISharedContext<T>, tests: (context: IContext<T>) => void) => {
-            new Describe<T>(
+            new Describe<T>({
                 description,
-                (context) => {
+                content: (context)=> {
                     sharedContext.setup(context);
                     tests(context);
                 }
-            ).register();
+            }).register();
         },
         withExamples: <E, C>(description: string, examples: E[], tests: (example: E, context: IContext<C>) => void) => {
-            new Describe<C>(
+            new Describe<C>({
                 description,
-                (context) => {
+                content: (context) => {
                     for (const example of examples) {
                         tests(example, context);
                     }
                 }
-            ).register();
+            }).register();
+        },
+        only: <T>(description: string, content: (context: IContext<T>) => void) => {
+            new Describe<T>({description, content, only: true}).register();
+        },
+        skip: <T>(description: string, content: (context: IContext<T>) => void) => {
+            new Describe<T>({description, content, skip: true}).register();
         }
     }
 );

@@ -2,6 +2,9 @@ import {AbstractTestContainer} from "./AbstractTestContainer";
 import type {ITestFile} from "../../domain/models/ITestFile";
 
 export class TestFile extends AbstractTestContainer implements ITestFile {
+    public readonly only = false;
+    public readonly skip = false;
+
     constructor(
         private readonly _path: string
     ) {

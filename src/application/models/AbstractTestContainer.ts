@@ -5,6 +5,9 @@ import type {ITest} from "../../domain/models/ITest";
 export abstract class AbstractTestContainer implements ITestContainer {
     public readonly id = uuidv4();
 
+    public abstract only: boolean;
+    public abstract skip: boolean;
+
     private readonly _tests: ITest[] = [];
     private readonly _testContainers: ITestContainer[] = [];
 

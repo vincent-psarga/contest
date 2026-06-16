@@ -8,6 +8,8 @@ export class Test implements ITest {
     constructor(
         private readonly _name: string,
         private readonly _body: TestBody,
+        private readonly _skip: boolean,
+        private readonly _only: boolean
     ) {}
 
     get name() {
@@ -16,5 +18,13 @@ export class Test implements ITest {
 
     get body() {
         return this._body;
+    }
+
+    get skip() {
+        return this._skip;
+    }
+
+    get only() {
+        return this._only;
     }
 }

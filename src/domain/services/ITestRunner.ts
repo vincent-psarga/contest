@@ -5,6 +5,5 @@ import type {ITestContainer} from "../models/ITestContainer";
 
 export interface ITestRunner {
     runTestContainers(testContainers: ITestContainer[]): Promise<TestSuiteStatus>;
-    runTestContainer(testContainer: ITestContainer, ancestors: ITestContainer[]): Promise<TestSuiteStatus>;
     runTest(test: ITest, ancestors: ITestContainer[]): Promise<TestStatus>;
 }

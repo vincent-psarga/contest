@@ -6,7 +6,9 @@ export class TestSuite extends AbstractTestContainer implements ITestSuite {
     private readonly _hooks: Partial<Record<Hooks, TestBody>> = {}
 
     constructor(
-        private readonly _name: string
+        private readonly _name: string,
+        private readonly _skip: boolean = false,
+        private readonly _only: boolean = false,
     ) {
         super();
     }
@@ -21,6 +23,14 @@ export class TestSuite extends AbstractTestContainer implements ITestSuite {
 
     addHook(hook: Hooks, body: TestBody) {
         this._hooks[hook] = body;
+    }
+
+    get only() {
+        return this._only;
+    }
+
+    get skip() {
+        return this._skip;
     }
 
     isITestSuite() {

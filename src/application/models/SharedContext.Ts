@@ -4,6 +4,9 @@ import type {IContext} from "../../domain/models/IContext";
 import {Contest} from "../../Contest";
 
 export class SharedContext<T> extends AbstractTestContainer implements ISharedContext<T> {
+    public readonly only = false;
+    public readonly skip = false;
+
     constructor(
         private readonly _name: string,
         private readonly _setup: (context: IContext<T>) => void,

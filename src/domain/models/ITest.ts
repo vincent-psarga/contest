@@ -3,5 +3,7 @@ import type {TestBody} from "./TestBody";
 export interface ITest {
     id: string,
     name: string;
-    body: TestBody
+    body: TestBody;
+    only: boolean;
+    skip: boolean;
 }
