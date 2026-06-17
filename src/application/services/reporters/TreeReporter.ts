@@ -1,22 +1,29 @@
 import {ContestEvents, type PayloadByEvent} from "../../../domain/services/events/ContestEvents";
 import {StatusEnum} from "../../../domain/models/TestStatus";
 import {AbstractReporter} from "./AbstractReporter";
+import type {ILogger} from "../../../domain/services/ILogger";
 
 export class TreeReporter extends AbstractReporter {
     private indentation = 0;
 
+    constructor(
+        logger: ILogger
+    ) {
+        super(logger);
+    }
+
     onTestFileStarted(payload: PayloadByEvent[ContestEvents.TestFileStarted]) {
-        console.log(`${this.indent()} ${payload.testFile.path}`)
+        this.logger.log(`${this.indent()} ${payload.testFile.path}`)
         this.indentation++
     }
 
     onTestFileEnded(): void {
-        console.log('')
+        this.logger.log('')
         this.indentation--
     }
 
     onTestSuiteStarted(payload: PayloadByEvent[ContestEvents.TestSuiteStarted]): void {
-        console.log(`${this.indent()} ${payload.testSuite.name}`)
+        this.logger.log(`${this.indent()} ${payload.testSuite.name}`)
         this.indentation++
     }
 
@@ -29,10 +36,14 @@ export class TreeReporter extends AbstractReporter {
 
         switch(payload.status.status) {
             case StatusEnum.ok:
-                console.log(`${this.indent()}  ✓ ${payload.test.name}`);
+                this.logger.log(`${this.indent()}  ${this.logger.typo.success('✓')} ${payload.test.name}`);
                 return;
             case StatusEnum.fail:
-                console.log(`${this.indent()}  ⨯ ${payload.test.name}`);
+                this.logger.log(`${this.indent()}  ${this.logger.typo.error('⨯')} ${payload.test.name}`);
+                return;
+            case StatusEnum.notRun:
+                this.logger.log(`${this.indent()}  ${this.logger.typo.faded('-')} ${payload.test.name}`);
+                return;
         }
     }
 

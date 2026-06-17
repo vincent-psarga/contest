@@ -50,7 +50,7 @@ export class TestRunner implements ITestRunner {
         const testPlan = this.buildTestPlan(testContainers);
         let status: TestSuiteStatus | undefined = undefined;
 
-        const onlyTests = testPlan.filter(({test, ancestors}) => test.only || ancestors.some(ancestor => ancestor.only));
+        const onlyTests = testPlan.filter(plan => plan.only);
 
         const tests = onlyTests.length > 0 ? onlyTests : testPlan;
 
@@ -106,15 +106,25 @@ export class TestRunner implements ITestRunner {
         }
     }
 
-    private buildTestPlan(testContainers: ITestContainer[], ancestors: ITestContainer[] = []): TestPlan {
+    private buildTestPlan(testContainers: ITestContainer[], ancestors: ITestContainer[] = [], only = false, skip = false): TestPlan {
         return testContainers.reduce((testPlan, container) => {
             for (const test of container.tests) {
-                testPlan.push({test, ancestors: [...ancestors, container]});
+                testPlan.push({
+                    test,
+                    ancestors: [...ancestors, container],
+                    only: only || test.only,
+                    skip: skip || test.skip,
+                });
             }
 
             return [
                 ...testPlan,
-                ...this.buildTestPlan(container.testContainers, [...ancestors, container]),
+                ...this.buildTestPlan(
+                    container.testContainers,
+                    [...ancestors, container],
+                    only || container.only,
+                    skip || container.skip,
+                ),
             ]
         }, [] as TestPlan);
     }
@@ -122,7 +132,9 @@ export class TestRunner implements ITestRunner {
 
 export type TestPlan  = {
   test: ITest,
-  ancestors: ITestContainer[]
+  ancestors: ITestContainer[],
+  only: boolean,
+  skip: boolean,
 }[]
 
 function isTestStatus(tbd: TestStatus | TestSuiteStatus): tbd is TestStatus {
