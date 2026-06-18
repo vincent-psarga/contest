@@ -46,7 +46,7 @@ export class TestContextRegistry implements ITestContextRegistry {
 
     get<T, K extends keyof T>(key: K): T[K] {
         if (this.currentExecutionContext === null) {
-            throw new Error('Get called outside of test loop')
+            throw new Error(`get("${String(key)}") called outside of test loop`)
         }
 
         return (this.currentExecutionContext as ExecutionContext<T>).get(key);

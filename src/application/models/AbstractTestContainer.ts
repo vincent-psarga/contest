@@ -7,6 +7,7 @@ export abstract class AbstractTestContainer implements ITestContainer {
 
     public abstract only: boolean;
     public abstract skip: boolean;
+    public abstract timeout: number | null;
 
     private readonly _tests: ITest[] = [];
     private readonly _testContainers: ITestContainer[] = [];

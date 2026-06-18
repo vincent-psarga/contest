@@ -6,6 +6,7 @@ import {Contest} from "../../Contest";
 export class SharedContext<T> extends AbstractTestContainer implements ISharedContext<T> {
     public readonly only = false;
     public readonly skip = false;
+    public readonly timeout = null;
 
     constructor(
         private readonly _name: string,

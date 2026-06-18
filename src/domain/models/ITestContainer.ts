@@ -4,6 +4,7 @@ export interface ITestContainer {
     id: string;
     only: boolean;
     skip: boolean;
+    timeout: number | null;
 
     testContainers: ITestContainer[];
     tests: ITest[];

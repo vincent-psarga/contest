@@ -19,7 +19,7 @@ export class TestRunner implements ITestRunner {
 
     async runTest(test: ITest, ancestors: ITestContainer[]) {
         this.eventBus.emit(ContestEvents.TestStarted, { test })
-        const testTimeout = test.timeout ?? this.timeout;
+        const testTimeout = this.computeTimeout(test, ancestors);
 
         const timeoutPromise = new Promise<TestStatus>(resolve => setTimeout(() => {
             resolve ({
@@ -79,6 +79,15 @@ export class TestRunner implements ITestRunner {
         }
 
         return status ?? { status: StatusEnum.notRun };
+    }
+
+    private computeTimeout(test: ITest, ancestors: ITestContainer[]): number {
+        let timeout = this.timeout;
+        ancestors.forEach((ancestor: ITestContainer) => {
+            timeout = ancestor.timeout ?? timeout;
+        });
+        timeout = test.timeout ?? timeout;
+        return timeout;
     }
 
     private updateTestSuiteStatus(current: TestSuiteStatus | undefined, newTestStatus: TestStatus | TestSuiteStatus): TestSuiteStatus {

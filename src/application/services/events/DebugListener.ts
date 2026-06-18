@@ -12,7 +12,12 @@ export class DebugListener implements IEventListener {
     }
 
     onTestSuiteLoaded(payload: PayloadByEvent[ContestEvents.TestSuiteLoaded]) {
-        this.logger.debug(`Loaded test suite: ${payload.testSuite.name} (in ${JSON.stringify(payload.container)})`)
+        try {
+            this.logger.debug(`Loaded test suite: ${payload.testSuite.name} (in ${JSON.stringify(payload.container)})`)
+        } catch (err) {
+            console.log({payload})
+        }
+
     }
 
     onHookRegistered(payload: PayloadByEvent[ContestEvents.HookRegistered]) {

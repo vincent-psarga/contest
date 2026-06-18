@@ -11,6 +11,7 @@ export const ITestContainerFactory = makeFactory<ITestContainer>(() => {
         id,
         only: false,
         skip: false,
+        timeout: null,
         testContainers: [],
         tests: [],
         addTestContainer: fn<(testContainer: ITestContainer) => void>(),

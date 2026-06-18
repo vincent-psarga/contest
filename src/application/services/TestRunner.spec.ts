@@ -69,17 +69,18 @@ describe<TestRunnerData>('TestRunner', (context) => {
         context.set('tests', [
             ITestFactory({
                 body: async () => {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await new Promise(resolve => setTimeout(resolve, 15));
                 }
             }
         )]);
 
         it('fails with a timeout if the test does not end before the default timeout', async () => {
             const test: ITest = context.get('tests')[0]!;
+            const expectedError = new TimeoutError(test.name, context.get('timeout'));
 
             expect(await testRunner.runTest(test, [])).toEqual({
                 status: StatusEnum.fail,
-                error: new TimeoutError(test.name, context.get('timeout'))
+                error: expectedError,
             });
         });
 
@@ -97,6 +98,23 @@ describe<TestRunnerData>('TestRunner', (context) => {
                 const test: ITest = context.get('tests')[0]!;
 
                 expect(await testRunner.runTest(test, [])).toEqual({
+                    status: StatusEnum.ok
+                });
+            })
+        });
+
+        describe('when an ancestors of the test has a custom timeout', () => {
+            context.set('testContainers', () => [
+                ITestContainerFactory({
+                    tests: context.get('tests'),
+                    timeout: 100,
+                })
+            ]);
+
+            it('overrides the default timeout', async () => {
+                const test: ITest = context.get('tests')[0]!;
+
+                expect(await testRunner.runTest(test, context.get('testContainers'))).toEqual({
                     status: StatusEnum.ok
                 });
             })

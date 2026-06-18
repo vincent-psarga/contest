@@ -9,6 +9,7 @@ export class TestSuite extends AbstractTestContainer implements ITestSuite {
         private readonly _name: string,
         private readonly _skip: boolean = false,
         private readonly _only: boolean = false,
+        private readonly _timeout: number | null = null,
     ) {
         super();
     }
@@ -31,6 +32,10 @@ export class TestSuite extends AbstractTestContainer implements ITestSuite {
 
     get skip() {
         return this._skip;
+    }
+
+    get timeout() {
+        return this._timeout;
     }
 
     isITestSuite() {

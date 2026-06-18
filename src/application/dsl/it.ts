@@ -3,7 +3,7 @@ import {Contest} from "../../Contest";
 import {Test} from "../models/Test";
 
 export type ItOptions = {
-    timeout?: number;
+    timeout: number;
 }
 
 class It {
@@ -21,7 +21,7 @@ class It {
             skip?: boolean,
             only?: boolean,
             contest?: Contest,
-        } & ItOptions
+        } & Partial<ItOptions>
     ) {
         this.description = options.description;
         this.test = options.test;
