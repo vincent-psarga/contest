@@ -12,12 +12,10 @@ import {ConsoleLogger} from "../infra/services/ConsoleLogger";
 type ContestRunOptions = {
     path?: string,
     reporter: IEventListener,
-    verbose: boolean
+    verbose: boolean,
+    timeout: number,
 }
-const consoleLogger = new ConsoleLogger(
-    process.stdout.isTTY,
-    console
-);
+const consoleLogger = new ConsoleLogger(process.stdout.isTTY);
 
 const argsParser = new ArgsParser<ContestRunOptions>()
     .addFlag('verbose', {
@@ -32,9 +30,16 @@ const argsParser = new ArgsParser<ContestRunOptions>()
         },
         default: new DotReporter(consoleLogger)
     })
+    .addOption('timeout', {
+        description: 'Default timeout after which a test is considered as failed',
+        default: 1000,
+        getValue: parseInt
+    })
     .addPositional('path', {});
 
 const args = argsParser.parse(process.argv.slice(2));
+
+Contest.initInstance({timeout: args.timeout});
 
 Contest.instance.addTestReporter(args.reporter);
 if (args.verbose) {

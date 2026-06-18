@@ -25,17 +25,29 @@ type ContestOptions = {
     testContextRegistry: ITestContextRegistry;
     testRunner: ITestRunner;
     eventBus: IEventBus;
+    timeout: number;
 }
 
+const DEFAULT_TIMEOUT = 1000;
+
 export class Contest {
-    static readonly instance: Contest = new Contest();
+    private static _instance: Contest;
+    static initInstance(opts: Partial<ContestOptions>) {
+        this._instance = new Contest(opts);
+    }
+
+    static get instance(): Contest {
+        if (!this._instance) {
+            this._instance = new Contest();
+        }
+        return this._instance;
+    }
+
     private readonly testLoader: ITestLoader;
     private readonly testRegistry: ITestRegistry;
     private readonly testRunner: ITestRunner;
     private readonly testContextRegistry: ITestContextRegistry;
     private readonly eventBus: IEventBus;
-
-    public readonly timeout = 1000;
 
     constructor(
         opts?: Partial<ContestOptions>
@@ -46,7 +58,7 @@ export class Contest {
             () => this.testRegistry.currentTestContainer
         );
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
-        this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry, this.timeout);
+        this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry, opts?.timeout ?? DEFAULT_TIMEOUT);
     }
 
     addTestReporter(reporter: IEventListener) {
