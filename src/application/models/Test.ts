@@ -9,7 +9,8 @@ export class Test implements ITest {
         private readonly _name: string,
         private readonly _body: TestBody,
         private readonly _skip: boolean,
-        private readonly _only: boolean
+        private readonly _only: boolean,
+        private readonly _timeout: number | null,
     ) {}
 
     get name() {
@@ -26,5 +27,9 @@ export class Test implements ITest {
 
     get only() {
         return this._only;
+    }
+
+    get timeout() {
+        return this._timeout;
     }
 }

@@ -8,39 +8,59 @@ import type {TestSuiteStatus} from "../../domain/models/TestSuiteStatus";
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 import type {ITestContainer} from "../../domain/models/ITestContainer";
 import {isITestFile} from "../../domain/models/ITestFile";
+import {TimeoutError} from "../../domain/errors/TimeoutError";
 
 export class TestRunner implements ITestRunner {
     constructor(
         private readonly eventBus: IEventBus,
         private readonly testContextRegistry: ITestContextRegistry,
+        private readonly timeout: number
     ) {}
 
     async runTest(test: ITest, ancestors: ITestContainer[]) {
         this.eventBus.emit(ContestEvents.TestStarted, { test })
-        let status: TestStatus;
+        const testTimeout = test.timeout ?? this.timeout;
 
-        try {
-            if (test.skip || ancestors.some(ancestor => ancestor.skip)) {
-                status = { status: StatusEnum.notRun};
-            } else {
-                await this.testContextRegistry.withAncestors(ancestors, async() => {
-                    for (const ancestor of ancestors) {
-                        if (isITestSuite(ancestor) && ancestor.hooks?.beforeEach) {
-                            await ancestor.hooks.beforeEach();
-                        }
-                    }
-
-                    return test.body();
-                })
-                status = { status: StatusEnum.ok};
-            }
-        } catch (err) {
-            status = {
+        const timeoutPromise = new Promise<TestStatus>(resolve => setTimeout(() => {
+            resolve ({
                 status: StatusEnum.fail,
-                error: err instanceof Error ? err : new Error(String(err))
-            }
-        }
+                error: new TimeoutError(test.name, testTimeout)}
+            );
+        }, testTimeout));
 
+        const statusPromise = new Promise<TestStatus>((resolve, reject) => {
+            try {
+                if (test.skip || ancestors.some(ancestor => ancestor.skip)) {
+                    resolve({ status: StatusEnum.notRun});
+                } else {
+                    this.testContextRegistry.withAncestors(ancestors, async() => {
+                        for (const ancestor of ancestors) {
+                            if (isITestSuite(ancestor) && ancestor.hooks?.beforeEach) {
+                                await ancestor.hooks.beforeEach();
+                            }
+                        }
+
+                        return test.body();
+                    }).then(() => {
+                        resolve({ status: StatusEnum.ok});
+                    }).catch(err => {
+                        resolve({
+                            status: StatusEnum.fail,
+                            error: err instanceof Error ? err : new Error(String(err))
+                        })
+                    })
+
+                }
+            } catch (err) {
+                resolve({
+                    status: StatusEnum.fail,
+                    error: err instanceof Error ? err : new Error(String(err))
+                });
+            }
+        });
+
+
+        const status = await Promise.race([statusPromise, timeoutPromise]);
 
         this.eventBus.emit(ContestEvents.TestEnded, { test, status });
         return status;

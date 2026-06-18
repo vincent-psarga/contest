@@ -6,4 +6,5 @@ export interface ITest {
     body: TestBody;
     only: boolean;
     skip: boolean;
+    timeout: number | null;
 }

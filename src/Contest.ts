@@ -35,6 +35,8 @@ export class Contest {
     private readonly testContextRegistry: ITestContextRegistry;
     private readonly eventBus: IEventBus;
 
+    public readonly timeout = 1000;
+
     constructor(
         opts?: Partial<ContestOptions>
     ) {
@@ -44,7 +46,7 @@ export class Contest {
             () => this.testRegistry.currentTestContainer
         );
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
-        this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry);
+        this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry, this.timeout);
     }
 
     addTestReporter(reporter: IEventListener) {
