@@ -9,7 +9,7 @@ class SampleSUT {
 }
 
 describe('SampleSUT', () => {
-    describe('.sayHello', () => {
+    describe('#sayHello', () => {
         it('returns a greeting', () => {
             assert.equal(new SampleSUT().hello('world'), 'Hello world');
         })

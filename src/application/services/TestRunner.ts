@@ -1,15 +1,12 @@
 import type {ITestRunner} from "../../domain/services/ITestRunner";
-import type {ITest} from "../../domain/models/ITest";
 import {isITestSuite} from "../../domain/models/ITestSuite";
 import type {IEventBus} from "../../domain/services/events/IEventBus";
 import {ContestEvents} from "../../domain/services/events/ContestEvents";
 import {StatusEnum, type TestStatus} from "../../domain/models/TestStatus";
 import type {TestSuiteStatus} from "../../domain/models/TestSuiteStatus";
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
-import type {ITestContainer} from "../../domain/models/ITestContainer";
-import {isITestFile} from "../../domain/models/ITestFile";
 import {TimeoutExceededError} from "../../domain/errors/TimeoutExceededError";
-import type {TestPlan, TestPlanEntry} from "../../domain/models/ITestPlan";
+import type {TestPlan, TestPlanEntry} from "../../domain/models/TestPlan";
 
 export class TestRunner implements ITestRunner {
     constructor(
@@ -26,6 +23,16 @@ export class TestRunner implements ITestRunner {
         ]);
         this.eventBus.emit(ContestEvents.TestEnded, { test: testPlanEntry.test, status });
         return status;
+    }
+
+    async runTestPlan(testPlan: TestPlan): Promise<TestSuiteStatus> {
+        let status: TestSuiteStatus | undefined = undefined;
+
+        for (const testPlanEntry of testPlan) {
+            status = this.updateTestSuiteStatus(status, await this.runTestPlanEntry(testPlanEntry));
+        }
+
+        return status ?? { status: StatusEnum.notRun };
     }
 
     private async getTimeoutPromise(testPlanEntry: TestPlanEntry): Promise<TestStatus> {
@@ -61,22 +68,6 @@ export class TestRunner implements ITestRunner {
         }
     }
 
-    async runTestContainers(testContainers: ITestContainer[]) {
-        const testPlan = this.buildTestPlan(testContainers, [], false, false, this.timeout);
-        let status: TestSuiteStatus | undefined = undefined;
-
-        const onlyTests = testPlan.filter(plan => plan.only);
-
-        const tests = onlyTests.length > 0 ? onlyTests : testPlan;
-
-        for (const testPlanEntry of tests) {
-            //status = this.updateTestSuiteStatus(status, await this.runTest(testPlanEntry.test, testPlanEntry.ancestors));
-            status = this.updateTestSuiteStatus(status, await this.runTestPlanEntry(testPlanEntry));
-        }
-
-        return status ?? { status: StatusEnum.notRun };
-    }
-
     private updateTestSuiteStatus(current: TestSuiteStatus | undefined, newTestStatus: TestStatus | TestSuiteStatus): TestSuiteStatus {
         if (!current) {
             if (newTestStatus.status === StatusEnum.fail) {
@@ -100,51 +91,6 @@ export class TestRunner implements ITestRunner {
         }
 
         return current;
-    }
-
-    private emitContainerStartEvent(testContainer: ITestContainer) {
-        if (isITestSuite(testContainer)) {
-            return this.eventBus.emit(ContestEvents.TestSuiteStarted, { testSuite: testContainer })
-        }
-
-        if (isITestFile(testContainer)) {
-            return this.eventBus.emit(ContestEvents.TestFileStarted, { testFile: testContainer })
-        }
-    }
-
-    private emitContainerEndEvent(testContainer: ITestContainer, status: TestSuiteStatus) {
-        if (isITestSuite(testContainer)) {
-            return this.eventBus.emit(ContestEvents.TestSuiteEnded, {testSuite: testContainer, status});
-        }
-
-        if (isITestFile(testContainer)) {
-            return this.eventBus.emit(ContestEvents.TestFileEnded, { testFile: testContainer, status })
-        }
-    }
-
-    private buildTestPlan(testContainers: ITestContainer[], ancestors: ITestContainer[], only: boolean, skip: boolean, timeout: number): TestPlan {
-        return testContainers.reduce((testPlan, container) => {
-            for (const test of container.tests) {
-                testPlan.push({
-                    test,
-                    ancestors: [...ancestors, container],
-                    only: only || container.only || test.only,
-                    skip: skip || container.skip || test.skip,
-                    timeout: test.timeout ?? container.timeout ?? timeout,
-                });
-            }
-
-            return [
-                ...testPlan,
-                ...this.buildTestPlan(
-                    container.testContainers,
-                    [...ancestors, container],
-                    only || container.only,
-                    skip || container.skip,
-                    container.timeout ?? timeout
-                ),
-            ]
-        }, [] as TestPlan);
     }
 }
 

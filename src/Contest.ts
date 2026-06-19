@@ -18,11 +18,14 @@ import type {ISharedContext} from "./domain/models/ISharedContext";
 import type {IContext} from "./domain/models/IContext";
 import type {ITestContainer} from "./domain/models/ITestContainer";
 import type {IEventListener} from "./domain/services/events/IEventListener";
+import type {ITestPlanBuilder} from "./domain/services/ITestPlanBuilder";
+import {TestPlanBuilder} from "./application/services/TestPlanBuilder";
 
 type ContestOptions = {
     testLoader: ITestLoader;
     testRegistry: ITestRegistry;
     testContextRegistry: ITestContextRegistry;
+    testPlanBuilder: ITestPlanBuilder;
     testRunner: ITestRunner;
     eventBus: IEventBus;
     timeout: number;
@@ -46,6 +49,7 @@ export class Contest {
     private readonly testLoader: ITestLoader;
     private readonly testRegistry: ITestRegistry;
     private readonly testRunner: ITestRunner;
+    private readonly testPlanBuilder: ITestPlanBuilder;
     private readonly testContextRegistry: ITestContextRegistry;
     private readonly eventBus: IEventBus;
 
@@ -58,6 +62,7 @@ export class Contest {
             () => this.testRegistry.currentTestContainer
         );
         this.testLoader = opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
+        this.testPlanBuilder = opts?.testPlanBuilder ?? new TestPlanBuilder(opts?.timeout ?? DEFAULT_TIMEOUT);
         this.testRunner = opts?.testRunner ?? new TestRunner(this.eventBus, this.testContextRegistry, opts?.timeout ?? DEFAULT_TIMEOUT);
     }
 
@@ -71,7 +76,9 @@ export class Contest {
 
         this.eventBus.emit(ContestEvents.TestRunStarted, {})
         await this.testLoader.load(testPath);
-        const status = await this.testRunner.runTestContainers(this.testRegistry.testContainers);
+
+        const testPlan = this.testPlanBuilder.buildTestPlan(this.testRegistry.testContainers);
+        const status = await this.testRunner.runTestPlan(testPlan);
         this.eventBus.emit(ContestEvents.TestRunEnded, {status: status});
         return status;
     }

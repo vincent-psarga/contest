@@ -14,7 +14,7 @@ import {StatusEnum, type TestStatus} from "../../domain/models/TestStatus";
 import {ITestFactory} from "../../../test/factories/models/ITestFactory";
 import {ITestContainerFactory} from "../../../test/factories/models/ITestContainerFactory";
 import {TestPlanEntryFactory} from "../../../test/factories/models/TestPlanEntryFactory";
-import type {TestPlanEntry} from "../../domain/models/ITestPlan";
+import type {TestPlanEntry} from "../../domain/models/TestPlan";
 import {ITestSuiteFactory} from "../../../test/factories/models/ITestSuiteFactory";
 import {MockCallStocker} from "../../../test/utils/MockCallStocker";
 
@@ -41,7 +41,7 @@ describe<TestRunnerData>('TestRunner', (context) => {
         );
     });
 
-    describe('.runTestContainers', () => {
+    describe('#runTestContainers', () => {
         describe('when a test is marked as .only', () => {
             context.set('tests', [
                 ITestFactory({name: 'My test'}),
@@ -68,7 +68,7 @@ describe<TestRunnerData>('TestRunner', (context) => {
         })
     });
 
-    describe<TestRunnerData & { testPlanEntry: TestPlanEntry }>('.runTestEntry', (context) => {
+    describe<TestRunnerData & { testPlanEntry: TestPlanEntry }>('#runTestEntry', (context) => {
         context.when('when an entry is marked with skip', {
             testPlanEntry: TestPlanEntryFactory({
                 skip: true

@@ -53,11 +53,7 @@ Contest.instance.run(args.path)
                 consoleLogger.log('✅ Done')
                 process.exit(0);
             case StatusEnum.fail:
-                consoleLogger.error('❌ Test failed');
-                for (const error of status.errors) {
-                    consoleLogger.error(error);
-                    consoleLogger.log('------------------')
-                }
+                consoleLogger.error('❌ Tests failed');
                 process.exit(1);
             case StatusEnum.notRun:
                 consoleLogger.log('❓Nothing has been ran')
