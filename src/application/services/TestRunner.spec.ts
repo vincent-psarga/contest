@@ -12,7 +12,6 @@ import { jestExpect as expect } from "@jest/expect";
 import { TimeoutExceededError } from "../../domain/errors/TimeoutExceededError";
 import { StatusEnum, type TestStatus } from "../../domain/models/TestStatus";
 import { ITestFactory } from "../../../test/factories/models/ITestFactory";
-import { ITestContainerFactory } from "../../../test/factories/models/ITestContainerFactory";
 import { TestPlanEntryFactory } from "../../../test/factories/models/TestPlanEntryFactory";
 import type { TestPlanEntry } from "../../domain/models/TestPlan";
 import { ITestSuiteFactory } from "../../../test/factories/models/ITestSuiteFactory";

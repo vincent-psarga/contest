@@ -32,8 +32,15 @@ const payloadByEvent = {
   },
   [ContestEvents.HookRegistered]: {} as { testSuite: ITestSuite; hook: Hooks },
   [ContestEvents.TestLoaded]: {} as { test: ITest; testSuite: ITestSuite },
-  [ContestEvents.TestStarted]: {} as { test: ITest },
-  [ContestEvents.TestEnded]: {} as { test: ITest; status: TestStatus },
+  [ContestEvents.TestStarted]: {} as {
+    test: ITest;
+    ancestors: ITestContainer[];
+  },
+  [ContestEvents.TestEnded]: {} as {
+    test: ITest;
+    ancestors: ITestContainer[];
+    status: TestStatus;
+  },
   [ContestEvents.TestSuiteStarted]: {} as { testSuite: ITestSuite },
   [ContestEvents.TestSuiteEnded]: {} as {
     testSuite: ITestSuite;

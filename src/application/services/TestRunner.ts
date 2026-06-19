@@ -16,13 +16,13 @@ export class TestRunner implements ITestRunner {
   ) {}
 
   async runTestPlanEntry(testPlanEntry: TestPlanEntry): Promise<TestStatus> {
-    this.eventBus.emit(ContestEvents.TestStarted, { test: testPlanEntry.test });
+    this.eventBus.emit(ContestEvents.TestStarted, testPlanEntry);
     const status = await Promise.race([
       this.executeTestPlanEntry(testPlanEntry),
       this.getTimeoutPromise(testPlanEntry),
     ]);
     this.eventBus.emit(ContestEvents.TestEnded, {
-      test: testPlanEntry.test,
+      ...testPlanEntry,
       status,
     });
     return status;
