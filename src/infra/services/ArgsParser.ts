@@ -30,15 +30,15 @@ export class ArgsParser<T> {
   private readonly options: Partial<Record<keyof T, CliArg<unknown>>> = {};
   private readonly positionals: Partial<Record<keyof T, CliArg<unknown>>> = {};
 
-  private flattenedFlags: Record<string, string>;
-  private flattenedOptions: Record<string, string>;
+  private flattenedFlags: Record<string, string> | null = null;
+  private flattenedOptions: Record<string, string> | null = null;
 
-  addFlag<K extends keyof T>(name: K, flag: Flag): ArgsParser<T> {
+  addFlag<K extends keyof T>(name: K, flag: Flag): this {
     this.flags[name] = { ...flag, default: false };
     return this;
   }
 
-  addOption<K extends keyof T>(name: K, option: CliArg<T[K]>): ArgsParser<T> {
+  addOption<K extends keyof T>(name: K, option: CliArg<T[K]>): this {
     this.options[name] = option;
     return this;
   }
@@ -46,14 +46,17 @@ export class ArgsParser<T> {
   addPositional<K extends keyof T>(
     name: K,
     positional: Positional<T[K]>,
-  ): ArgsParser<T> {
+  ): this {
     this.positionals[name] = positional;
     return this;
   }
 
   parse(args: string[]): T {
-    const parsed = this.buildDefaultValue();
     const argsCopy = args.map((arg) => arg);
+
+    const flags: Partial<Record<keyof T, boolean>> = {};
+    const options: Partial<Record<keyof T, unknown>> = {};
+    const positionals: Partial<Record<keyof T, unknown>> = {};
 
     let currentPositionalIndex = 0;
 
@@ -65,14 +68,14 @@ export class ArgsParser<T> {
       if (arg?.startsWith("-")) {
         const flagKey = this.getFlagKey(arg);
         if (flagKey) {
-          parsed[flagKey] = true;
+          flags[flagKey] = true;
           continue;
         }
 
         const { optionKey, optionValue } = this.getOptionKey(arg);
         if (optionKey) {
           if (optionValue) {
-            parsed[optionKey] = optionValue;
+            options[optionKey] = optionValue;
             continue;
           }
 
@@ -86,11 +89,11 @@ export class ArgsParser<T> {
             if (!actualValue) {
               throw new MissingOptionValue(`--${String(optionKey)}`);
             }
-            parsed[optionKey] = this.getOptionValue(optionKey, actualValue);
+            options[optionKey] = this.getOptionValue(optionKey, actualValue);
             continue;
           }
 
-          parsed[optionKey] = this.getOptionValue(optionKey, value);
+          options[optionKey] = this.getOptionValue(optionKey, value);
           continue;
         }
 
@@ -103,18 +106,28 @@ export class ArgsParser<T> {
       if (!positionalKey) {
         throw new ExtraPositionalValue(arg);
       }
-      parsed[positionalKey] = this.getPositionalValue(positionalKey, arg);
+      positionals[positionalKey] = this.getPositionalValue(positionalKey, arg);
       currentPositionalIndex++;
     }
 
-    return parsed;
+    return {
+      ...this.buildDefaultValue(),
+      ...flags,
+      ...options,
+      ...positionals,
+    } as T;
   }
 
   private getFlagKey(arg: string): keyof T | null {
-    this.flattenedFlags ??= Object.entries(this.flags).reduce(
-      (acc, [key, value]) => {
+    return (this.computeFlattenedFlags()[arg] as keyof T) ?? null;
+  }
+
+  private computeFlattenedFlags() {
+    this.flattenedFlags ??= Object.keys(this.flags).reduce(
+      (acc, key) => {
+        const value = this.flags[key as keyof T];
         acc[`--${key}`] = key;
-        if (value.short) {
+        if (value?.short) {
           acc[`-${value.short}`] = key;
         }
 
@@ -122,20 +135,17 @@ export class ArgsParser<T> {
       },
       {} as Record<string, string>,
     );
-
-    if (this.flattenedFlags[arg]) {
-      return this.flattenedFlags[arg] as keyof T;
-    }
-    return null;
+    return this.flattenedFlags;
   }
 
   private getOptionKey<K extends keyof T>(
     arg: string,
   ): { optionKey: K | null; optionValue?: T[K] } {
-    this.flattenedOptions ??= Object.entries(this.options).reduce(
-      (acc, [key, value]) => {
+    this.flattenedOptions ??= Object.keys(this.options).reduce(
+      (acc, key) => {
+        const value = this.options[key as keyof T];
         acc[`--${key}`] = key;
-        if (value.short) {
+        if (value?.short) {
           acc[`-${value.short}`] = key;
         }
 
@@ -146,8 +156,8 @@ export class ArgsParser<T> {
 
     if (arg.includes("=")) {
       const [key, value] = arg.split("=");
-      if (!value) {
-        throw new MissingOptionValue(key);
+      if (!key || !value) {
+        throw new MissingOptionValue(key ?? "unknownKey");
       }
 
       const optionKey = this.flattenedOptions[key] as K;
@@ -186,23 +196,34 @@ export class ArgsParser<T> {
   }
 
   private buildDefaultValue(): T {
+    const flags: Partial<Record<string, boolean>> = {};
+    const options: Partial<Record<string, unknown>> = {};
+    const positionals: Partial<Record<string, unknown>> = {};
+
     const defaultValues = {} as T;
     for (const flag of Object.keys(this.flags)) {
-      defaultValues[flag] = false;
+      flags[flag] = false;
     }
 
-    for (const [name, option] of Object.entries(this.options)) {
-      if (option.default) {
-        defaultValues[name] = option.default;
+    for (const name of Object.keys(this.options)) {
+      const option = this.options[name as keyof T];
+
+      if (option?.default) {
+        options[name] = option.default;
       }
     }
 
-    for (const [name, positional] of Object.entries(this.positionals)) {
-      if (positional.default) {
-        defaultValues[name] = positional.default;
+    for (const name of Object.keys(this.positionals)) {
+      const positional = this.positionals[name as keyof T];
+      if (positional?.default) {
+        positionals[name] = positional.default;
       }
     }
 
-    return defaultValues;
+    return {
+      ...flags,
+      ...options,
+      ...positionals,
+    } as T;
   }
 }

@@ -30,8 +30,10 @@ export class Context<T> implements IContext<T> {
     const { description, context, callback } = this.getWhenParameters(...args);
 
     describe<T>(description, (ctx) => {
-      for (const [k, v] of Object.entries(context)) {
-        ctx.set(k as keyof T, v);
+      for (const key of Object.keys(context)) {
+        const value = context[key as keyof T];
+
+        ctx.set(key as keyof T, value!);
       }
 
       callback();
