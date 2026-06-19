@@ -9,10 +9,14 @@ import {TestContextRegistry} from "./TestContextRegistry";
 import type {ITest} from "../../domain/models/ITest";
 import {it} from "../dsl/it";
 import {jestExpect as expect} from "@jest/expect";
-import {TimeoutError} from "../../domain/errors/TimeoutError";
-import {StatusEnum} from "../../domain/models/TestStatus";
+import {TimeoutExceededError} from "../../domain/errors/TimeoutExceededError";
+import {StatusEnum, type TestStatus} from "../../domain/models/TestStatus";
 import {ITestFactory} from "../../../test/factories/models/ITestFactory";
 import {ITestContainerFactory} from "../../../test/factories/models/ITestContainerFactory";
+import {TestPlanEntryFactory} from "../../../test/factories/models/TestPlanEntryFactory";
+import type {TestPlanEntry} from "../../domain/models/ITestPlan";
+import {ITestSuiteFactory} from "../../../test/factories/models/ITestSuiteFactory";
+import {MockCallStocker} from "../../../test/utils/MockCallStocker";
 
 type TestRunnerData = {
     eventBus: IEventBus;
@@ -64,61 +68,112 @@ describe<TestRunnerData>('TestRunner', (context) => {
         })
     });
 
-    describe<TestRunnerData>('.runTest', () => {
-        context.set('timeout', 10);
-        context.set('tests', [
-            ITestFactory({
-                body: async () => {
-                    await new Promise(resolve => setTimeout(resolve, 15));
-                }
-            }
-        )]);
+    describe<TestRunnerData & { testPlanEntry: TestPlanEntry }>('.runTestEntry', (context) => {
+        context.when('when an entry is marked with skip', {
+            testPlanEntry: TestPlanEntryFactory({
+                skip: true
+            }),
 
-        it('fails with a timeout if the test does not end before the default timeout', async () => {
-            const test: ITest = context.get('tests')[0]!;
-            const expectedError = new TimeoutError(test.name, context.get('timeout'));
+        },  () => {
+            let status: TestStatus
 
-            expect(await testRunner.runTest(test, [])).toEqual({
-                status: StatusEnum.fail,
-                error: expectedError,
+            beforeEach(async () => {
+                status = await testRunner.runTestPlanEntry(context.get('testPlanEntry'));
+            })
+
+            it('does not execute the test', () => {
+                expect(context.get('testPlanEntry').test.body).not.toHaveBeenCalled();
+            });
+
+            it('returns a StatusEnum.notRun status', () => {
+                expect(status).toEqual({ status: StatusEnum.notRun });
+            })
+        });
+
+        context.when('the test passes', {
+            testPlanEntry: TestPlanEntryFactory({
+                test: ITestFactory()
+            }),
+        },  () => {
+            it('returns a StatusEnum.ok status', async () => {
+                const status = await testRunner.runTestPlanEntry(context.get('testPlanEntry'));
+                expect(status).toEqual({ status: StatusEnum.ok });
+            })
+        });
+
+
+        context.when('the test throws an exception', {
+            testPlanEntry: TestPlanEntryFactory({
+                test: ITestFactory({
+                    body: () => {
+                        throw new Error('Some error')
+                    }
+                })
+            }),
+        },  () => {
+            it('returns a StatusEnum.fail status', async () => {
+                const status = await testRunner.runTestPlanEntry(context.get('testPlanEntry'));
+                expect(status).toEqual({ status: StatusEnum.fail, error: new Error('Some error')});
+            })
+        });
+
+        context.when('ancestors have hooks defined', {
+            testPlanEntry: TestPlanEntryFactory({
+                test: ITestFactory({
+                    body: MockCallStocker.fn('test')
+                }),
+                ancestors: [
+                    ITestSuiteFactory({ hooks: { beforeEach: MockCallStocker.fn('first before each')}}),
+                    ITestSuiteFactory({ hooks: { beforeEach: MockCallStocker.fn('second before each')}})
+                ]
+            })
+        }, () => {
+            beforeEach(() => {
+                MockCallStocker.resetCalls();
+            });
+
+            it('calls the beforeEach hooks in order before calling the test body', async () => {
+                await testRunner.runTestPlanEntry(context.get('testPlanEntry'));
+
+                expect(MockCallStocker.calls).toEqual(['first before each', 'second before each', 'test']);
             });
         });
 
-        describe('when the test has its own timeout', () => {
-            context.set('tests', [
-                ITestFactory({
-                    body: async () => {
-                        await new Promise(resolve => setTimeout(resolve, 20));
-                    },
-                    timeout: 100,
-                }
-            )]);
-
-            it('overrides the default timeout', async () => {
-                const test: ITest = context.get('tests')[0]!;
-
-                expect(await testRunner.runTest(test, [])).toEqual({
-                    status: StatusEnum.ok
+        context.when('test takes longer than the expected timeout', {
+            testPlanEntry: TestPlanEntryFactory({
+                timeout: 10,
+                test: ITestFactory({
+                    name: 'Timeout test',
+                    body: async () => { return new Promise(resolve => setTimeout(resolve, 15)); },
+                })
+            })
+        }, () => {
+            it('fails with a TimeoutExceededError', async () => {
+                expect(
+                    await testRunner.runTestPlanEntry(context.get('testPlanEntry'))
+                ).toEqual({
+                    status: StatusEnum.fail,
+                    error: new TimeoutExceededError('Timeout test', 10)
                 });
             })
-        });
 
-        describe('when an ancestors of the test has a custom timeout', () => {
-            context.set('testContainers', () => [
-                ITestContainerFactory({
-                    tests: context.get('tests'),
-                    timeout: 100,
+            context.when('the entry specifies a longer timeout', {
+                testPlanEntry: TestPlanEntryFactory({
+                    timeout: 20,
+                    test: ITestFactory({
+                        name: 'Timeout test',
+                        body: async () => { return new Promise(resolve => setTimeout(resolve, 15)); },
+                    })
                 })
-            ]);
-
-            it('overrides the default timeout', async () => {
-                const test: ITest = context.get('tests')[0]!;
-
-                expect(await testRunner.runTest(test, context.get('testContainers'))).toEqual({
-                    status: StatusEnum.ok
-                });
+            }, () => {
+                it('allows the test to finish', async () => {
+                    expect(
+                        await testRunner.runTestPlanEntry(context.get('testPlanEntry'))
+                    ).toEqual({
+                        status: StatusEnum.ok
+                    });
+                })
             })
         })
     })
-
 })

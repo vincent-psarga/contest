@@ -8,7 +8,8 @@ import type {TestSuiteStatus} from "../../domain/models/TestSuiteStatus";
 import type {ITestContextRegistry} from "../../domain/services/ITestContextRegistry";
 import type {ITestContainer} from "../../domain/models/ITestContainer";
 import {isITestFile} from "../../domain/models/ITestFile";
-import {TimeoutError} from "../../domain/errors/TimeoutError";
+import {TimeoutExceededError} from "../../domain/errors/TimeoutExceededError";
+import type {TestPlan, TestPlanEntry} from "../../domain/models/ITestPlan";
 
 export class TestRunner implements ITestRunner {
     constructor(
@@ -17,77 +18,63 @@ export class TestRunner implements ITestRunner {
         private readonly timeout: number
     ) {}
 
-    async runTest(test: ITest, ancestors: ITestContainer[]) {
-        this.eventBus.emit(ContestEvents.TestStarted, { test })
-        const testTimeout = this.computeTimeout(test, ancestors);
-
-        const timeoutPromise = new Promise<TestStatus>(resolve => setTimeout(() => {
-            resolve ({
-                status: StatusEnum.fail,
-                error: new TimeoutError(test.name, testTimeout)}
-            );
-        }, testTimeout));
-
-        const statusPromise = new Promise<TestStatus>((resolve, reject) => {
-            try {
-                if (test.skip || ancestors.some(ancestor => ancestor.skip)) {
-                    resolve({ status: StatusEnum.notRun});
-                } else {
-                    this.testContextRegistry.withAncestors(ancestors, async() => {
-                        for (const ancestor of ancestors) {
-                            if (isITestSuite(ancestor) && ancestor.hooks?.beforeEach) {
-                                await ancestor.hooks.beforeEach();
-                            }
-                        }
-
-                        return test.body();
-                    }).then(() => {
-                        resolve({ status: StatusEnum.ok});
-                    }).catch(err => {
-                        resolve({
-                            status: StatusEnum.fail,
-                            error: err instanceof Error ? err : new Error(String(err))
-                        })
-                    })
-
-                }
-            } catch (err) {
-                resolve({
-                    status: StatusEnum.fail,
-                    error: err instanceof Error ? err : new Error(String(err))
-                });
-            }
-        });
-
-
-        const status = await Promise.race([statusPromise, timeoutPromise]);
-
-        this.eventBus.emit(ContestEvents.TestEnded, { test, status });
+    async runTestPlanEntry(testPlanEntry: TestPlanEntry): Promise<TestStatus> {
+        this.eventBus.emit(ContestEvents.TestStarted, { test: testPlanEntry.test })
+        const status = await Promise.race([
+            this.executeTestPlanEntry(testPlanEntry),
+            this.getTimeoutPromise(testPlanEntry)
+        ]);
+        this.eventBus.emit(ContestEvents.TestEnded, { test: testPlanEntry.test, status });
         return status;
     }
 
+    private async getTimeoutPromise(testPlanEntry: TestPlanEntry): Promise<TestStatus> {
+        return new Promise<TestStatus>(resolve => setTimeout(() => {
+            resolve({ status: StatusEnum.fail, error: new TimeoutExceededError(testPlanEntry.test.name, testPlanEntry.timeout)});
+        }, testPlanEntry.timeout))
+    }
+
+    private async executeTestPlanEntry({ test, ancestors, skip }: TestPlanEntry): Promise<TestStatus> {
+        if (skip) {
+            return { status: StatusEnum.notRun }
+        }
+
+        try {
+            await this.testContextRegistry.withAncestors(ancestors, async() => {
+                for (const ancestor of ancestors) {
+                    if (isITestSuite(ancestor) && ancestor.hooks.beforeEach) {
+                        await ancestor.hooks.beforeEach()
+                    }
+                }
+
+                return test.body();
+            });
+
+            return {
+                status: StatusEnum.ok
+            };
+        } catch (err) {
+            return {
+                status: StatusEnum.fail,
+                error: err instanceof Error ? err : new Error(String(err))
+            };
+        }
+    }
+
     async runTestContainers(testContainers: ITestContainer[]) {
-        const testPlan = this.buildTestPlan(testContainers);
+        const testPlan = this.buildTestPlan(testContainers, [], false, false, this.timeout);
         let status: TestSuiteStatus | undefined = undefined;
 
         const onlyTests = testPlan.filter(plan => plan.only);
 
         const tests = onlyTests.length > 0 ? onlyTests : testPlan;
 
-        for (const {test, ancestors } of tests) {
-            status = this.updateTestSuiteStatus(status, await this.runTest(test, ancestors));
+        for (const testPlanEntry of tests) {
+            //status = this.updateTestSuiteStatus(status, await this.runTest(testPlanEntry.test, testPlanEntry.ancestors));
+            status = this.updateTestSuiteStatus(status, await this.runTestPlanEntry(testPlanEntry));
         }
 
         return status ?? { status: StatusEnum.notRun };
-    }
-
-    private computeTimeout(test: ITest, ancestors: ITestContainer[]): number {
-        let timeout = this.timeout;
-        ancestors.forEach((ancestor: ITestContainer) => {
-            timeout = ancestor.timeout ?? timeout;
-        });
-        timeout = test.timeout ?? timeout;
-        return timeout;
     }
 
     private updateTestSuiteStatus(current: TestSuiteStatus | undefined, newTestStatus: TestStatus | TestSuiteStatus): TestSuiteStatus {
@@ -135,14 +122,15 @@ export class TestRunner implements ITestRunner {
         }
     }
 
-    private buildTestPlan(testContainers: ITestContainer[], ancestors: ITestContainer[] = [], only = false, skip = false): TestPlan {
+    private buildTestPlan(testContainers: ITestContainer[], ancestors: ITestContainer[], only: boolean, skip: boolean, timeout: number): TestPlan {
         return testContainers.reduce((testPlan, container) => {
             for (const test of container.tests) {
                 testPlan.push({
                     test,
                     ancestors: [...ancestors, container],
-                    only: only || test.only,
-                    skip: skip || test.skip,
+                    only: only || container.only || test.only,
+                    skip: skip || container.skip || test.skip,
+                    timeout: test.timeout ?? container.timeout ?? timeout,
                 });
             }
 
@@ -153,18 +141,12 @@ export class TestRunner implements ITestRunner {
                     [...ancestors, container],
                     only || container.only,
                     skip || container.skip,
+                    container.timeout ?? timeout
                 ),
             ]
         }, [] as TestPlan);
     }
 }
-
-export type TestPlan  = {
-  test: ITest,
-  ancestors: ITestContainer[],
-  only: boolean,
-  skip: boolean,
-}[]
 
 function isTestStatus(tbd: TestStatus | TestSuiteStatus): tbd is TestStatus {
     const ts = tbd as TestStatus;
