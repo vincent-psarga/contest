@@ -1,33 +1,36 @@
-import type {ISharedContext} from "../../domain/models/ISharedContext";
-import {AbstractTestContainer} from "./AbstractTestContainer";
-import type {IContext} from "../../domain/models/IContext";
-import {Contest} from "../../Contest";
+import type { ISharedContext } from "../../domain/models/ISharedContext";
+import { AbstractTestContainer } from "./AbstractTestContainer";
+import type { IContext } from "../../domain/models/IContext";
+import { Contest } from "../../Contest";
 
-export class SharedContext<T> extends AbstractTestContainer implements ISharedContext<T> {
-    public readonly only = false;
-    public readonly skip = false;
-    public readonly timeout = null;
+export class SharedContext<T>
+  extends AbstractTestContainer
+  implements ISharedContext<T>
+{
+  public readonly only = false;
+  public readonly skip = false;
+  public readonly timeout = null;
 
-    constructor(
-        private readonly _name: string,
-        private readonly _setup: (context: IContext<T>) => void,
-        private readonly contest = Contest.instance
-    ) {
-        super();
-    }
+  constructor(
+    private readonly _name: string,
+    private readonly _setup: (context: IContext<T>) => void,
+    private readonly contest = Contest.instance,
+  ) {
+    super();
+  }
 
-    isISharedContext(){
-        return true;
-    }
-    get name() {
-        return this._name;
-    }
+  isISharedContext() {
+    return true;
+  }
+  get name() {
+    return this._name;
+  }
 
-    get setup() {
-        return this._setup;
-    }
+  get setup() {
+    return this._setup;
+  }
 
-    register<U>(tests: (context: IContext<T & U>) => void): void {
-        this.contest.registerSharedContext<T, U>(this, tests);
-    }
+  register<U>(tests: (context: IContext<T & U>) => void): void {
+    this.contest.registerSharedContext<T, U>(this, tests);
+  }
 }

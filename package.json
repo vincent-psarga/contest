@@ -6,18 +6,23 @@
   "main": "index.js",
   "scripts": {
     "contest": "tsx src/bin/contest.ts",
-    "test": "npm run contest"
+    "test": "npm run contest",
+    "prettier:check": "prettier -c .",
+    "prettier:write": "prettier -w ."
   },
   "author": "Vincent Prêtre",
   "license": "ISC",
   "devDependencies": {
     "@jest/expect": "^30.4.1",
-    "jest-mock": "^30.4.1",
     "@types/node": "^25.9.1",
+    "jest-mock": "^30.4.1",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "husky": "^9.1.7",
+    "prettier": "^3.8.4",
+    "pretty-quick": "^4.2.2",
     "uuid": "^14.0.0"
   }
 }

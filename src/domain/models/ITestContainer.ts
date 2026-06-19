@@ -1,14 +1,14 @@
-import type {ITest} from "./ITest";
+import type { ITest } from "./ITest";
 
 export interface ITestContainer {
-    id: string;
-    only: boolean;
-    skip: boolean;
-    timeout: number | null;
+  id: string;
+  only: boolean;
+  skip: boolean;
+  timeout: number | null;
 
-    testContainers: ITestContainer[];
-    tests: ITest[];
+  testContainers: ITestContainer[];
+  tests: ITest[];
 
-    addTestContainer: (testContainer: ITestContainer) => void;
-    addTest: (test: ITest) => void;
+  addTestContainer: (testContainer: ITestContainer) => void;
+  addTest: (test: ITest) => void;
 }

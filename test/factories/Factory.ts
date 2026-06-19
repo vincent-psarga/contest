@@ -1,10 +1,10 @@
 export type Factory<T> = (data?: Partial<T>) => T;
 
 export function makeFactory<T>(defaultData: () => T): Factory<T> {
-    return (data?: Partial<T>)=> {
-        return {
-            ...defaultData(),
-            ...data
-        }
-    }
+  return (data?: Partial<T>) => {
+    return {
+      ...defaultData(),
+      ...data,
+    };
+  };
 }

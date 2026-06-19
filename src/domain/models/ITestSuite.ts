@@ -1,19 +1,19 @@
-import type {TestBody} from "./TestBody";
-import {type ITestContainer } from "./ITestContainer";
-import {respondsWith} from "../utils/respondsWith";
+import type { TestBody } from "./TestBody";
+import { type ITestContainer } from "./ITestContainer";
+import { respondsWith } from "../utils/respondsWith";
 
 export enum Hooks {
-    beforeEach = 'beforeEach',
+  beforeEach = "beforeEach",
 }
 
 export interface ITestSuite extends ITestContainer {
-    name: string;
-    hooks: Partial<Record<Hooks, TestBody>>;
+  name: string;
+  hooks: Partial<Record<Hooks, TestBody>>;
 
-    addHook(hook: Hooks, body: TestBody): void;
-    isITestSuite(): boolean;
+  addHook(hook: Hooks, body: TestBody): void;
+  isITestSuite(): boolean;
 }
 
 export function isITestSuite(tbd: ITestContainer): tbd is ITestSuite {
-    return respondsWith(tbd as ITestSuite, 'isITestSuite', true);
+  return respondsWith(tbd as ITestSuite, "isITestSuite", true);
 }

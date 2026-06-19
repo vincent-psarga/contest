@@ -1,5 +1,5 @@
 export class CurrentTestSuiteNotFound extends Error {
-    constructor() {
-        super(`No current test suite`);
-    }
+  constructor() {
+    super(`No current test suite`);
+  }
 }

@@ -1,40 +1,33 @@
-import type {IEventListener} from "../../../domain/services/events/IEventListener";
-import {ContestEvents, type PayloadByEvent} from "../../../domain/services/events/ContestEvents";
+import type { IEventListener } from "../../../domain/services/events/IEventListener";
+import {
+  ContestEvents,
+  type PayloadByEvent,
+} from "../../../domain/services/events/ContestEvents";
 
 export class NoOpListener implements IEventListener {
-    onTestFileLoaded(payload: PayloadByEvent[ContestEvents.TestFileLoaded]) {
-    }
+  onTestFileLoaded(payload: PayloadByEvent[ContestEvents.TestFileLoaded]) {}
 
-    onTestSuiteLoaded(payload: PayloadByEvent[ContestEvents.TestSuiteLoaded]) {
-    }
+  onTestSuiteLoaded(payload: PayloadByEvent[ContestEvents.TestSuiteLoaded]) {}
 
-    onHookRegistered(payload: PayloadByEvent[ContestEvents.HookRegistered]) {
-    }
+  onHookRegistered(payload: PayloadByEvent[ContestEvents.HookRegistered]) {}
 
-    onTestLoaded(payload: PayloadByEvent[ContestEvents.TestLoaded]) {
-    }
+  onTestLoaded(payload: PayloadByEvent[ContestEvents.TestLoaded]) {}
 
-    onTestStarted(payload: PayloadByEvent[ContestEvents.TestStarted]) {
-    }
+  onTestStarted(payload: PayloadByEvent[ContestEvents.TestStarted]) {}
 
-    onTestEnded(payload: PayloadByEvent[ContestEvents.TestEnded]) {
-    }
+  onTestEnded(payload: PayloadByEvent[ContestEvents.TestEnded]) {}
 
-    onTestSuiteStarted(payload: PayloadByEvent[ContestEvents.TestSuiteStarted]) {
-    }
+  onTestSuiteStarted(payload: PayloadByEvent[ContestEvents.TestSuiteStarted]) {}
 
-    onTestSuiteEnded(payload: PayloadByEvent[ContestEvents.TestSuiteEnded]) {
-    }
+  onTestSuiteEnded(payload: PayloadByEvent[ContestEvents.TestSuiteEnded]) {}
 
-    onTestRunStarted(payload: PayloadByEvent[ContestEvents.TestRunStarted]) {
-    }
+  onTestRunStarted(payload: PayloadByEvent[ContestEvents.TestRunStarted]) {}
 
-    onTestRunEnded(payload: PayloadByEvent[ContestEvents.TestRunEnded]) {
-    }
+  onTestRunEnded(payload: PayloadByEvent[ContestEvents.TestRunEnded]) {}
 
-    onTestFileStarted(payload: PayloadByEvent[ContestEvents.TestFileStarted]): void {
-    }
+  onTestFileStarted(
+    payload: PayloadByEvent[ContestEvents.TestFileStarted],
+  ): void {}
 
-    onTestFileEnded(payload: PayloadByEvent[ContestEvents.TestFileEnded]): void {
-    }
+  onTestFileEnded(payload: PayloadByEvent[ContestEvents.TestFileEnded]): void {}
 }

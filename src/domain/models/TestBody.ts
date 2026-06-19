@@ -1,1 +1,1 @@
-export type TestBody = () => void | Promise<void>
+export type TestBody = () => void | Promise<void>;

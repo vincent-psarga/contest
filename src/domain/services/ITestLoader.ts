@@ -1,5 +1,5 @@
-import type {ITestContainer} from "../models/ITestContainer";
+import type { ITestContainer } from "../models/ITestContainer";
 
 export interface ITestLoader {
-    load(workingDirectory: string): Promise<ITestContainer[]>;
+  load(workingDirectory: string): Promise<ITestContainer[]>;
 }
