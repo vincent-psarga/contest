@@ -92,7 +92,7 @@ export class Contest {
     return status;
   }
 
-  getContext<T>(testContainer: ITestContainer): Context<T> {
+  getContext<T>(testContainer: ITestContainer): IContext<T> {
     return this.testContextRegistry.getContext(testContainer.id);
   }
 
