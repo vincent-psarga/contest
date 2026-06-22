@@ -33,4 +33,14 @@ export class SharedContext<T>
   register<U>(tests: (context: IContext<T & U>) => void): void {
     this.contest.registerSharedContext<T, U>(this, tests);
   }
+
+  extends<U>(
+    name: string,
+    setup: (context: IContext<T & U>) => void,
+  ): ISharedContext<T & U> {
+    return new SharedContext(name, (context) => {
+      this.setup(context);
+      setup(context);
+    });
+  }
 }

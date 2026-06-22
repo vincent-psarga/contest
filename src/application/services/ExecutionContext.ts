@@ -12,7 +12,7 @@ export class ExecutionContext<T> implements IStorage<T> {
     this.contextStorage = new Storage<T>();
     for (const storage of contextStorages) {
       for (const key of storage.keys) {
-        this.contextStorage.set(key, () => storage.get(key));
+        this.contextStorage.set(key, storage.getCallback(key));
       }
     }
   }

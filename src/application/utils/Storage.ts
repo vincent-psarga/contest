@@ -39,4 +39,8 @@ export class Storage<T> implements IStorage<T> {
   get keys() {
     return this._keys.keys();
   }
+
+  getCallback<K extends keyof T>(key: K): () => T[K] {
+    return this.callbacks[key];
+  }
 }

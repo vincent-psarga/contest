@@ -1,17 +1,8 @@
 import { describe } from "./describe";
-import type { IContext } from "../../domain/models/IContext";
-import type { ISharedContext } from "../../domain/models/ISharedContext";
-import { SharedContext } from "../models/SharedContext";
 import { it } from "./it";
 import { jestExpect as expect } from "@jest/expect";
 import { ContextNotSetError } from "../../domain/errors/ContextNotSetError";
-
-function sharedContext<T>(
-  name: string,
-  setup: (context: IContext<T>) => void,
-): ISharedContext<T> {
-  return new SharedContext(name, setup);
-}
+import { sharedContext } from "./sharedContext";
 
 enum UserStatus {
   pending = "pending",
@@ -24,10 +15,21 @@ type UserContext = {
   password: string;
   status: UserStatus;
 };
+
 const userContext = sharedContext<UserContext>("with user", (context) => {
   context.set("username", "someone@example.com");
   context.set("password", "superS3cr3t");
   context.set("status", UserStatus.activated);
+});
+
+const projectContext = userContext.extends<{
+  project: {
+    name: string;
+  };
+}>("with project", (context) => {
+  context.set("project", () => ({
+    name: `${context.get("username")}'s project`,
+  }));
 });
 
 describe("sharedContext", (context) => {
@@ -42,6 +44,24 @@ describe("sharedContext", (context) => {
     const getUsername = () => context.get("username");
 
     expect(getUsername).toThrow(new ContextNotSetError("username"));
+  });
+
+  context.with(projectContext, (contextWithUserAndProject) => {
+    it("properly loads ancestor context", () => {
+      expect(contextWithUserAndProject.get("project")).toEqual({
+        name: "someone@example.com's project",
+      });
+    });
+
+    describe("when a property is overridden", () => {
+      contextWithUserAndProject.set("username", "bob@example.com");
+
+      it("properly loads ancestor context with overridden properties", () => {
+        expect(contextWithUserAndProject.get("project")).toEqual({
+          name: "bob@example.com's project",
+        });
+      });
+    });
   });
 });
 

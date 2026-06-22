@@ -6,6 +6,10 @@ export interface ISharedContext<T> extends ITestContainer {
   name: string;
   setup: (context: IContext<T>) => void;
   register<U>(tests: (context: IContext<T & U>) => void): void;
+  extends<U>(
+    name: string,
+    setup: (context: IContext<T & U>) => void,
+  ): ISharedContext<T & U>;
   isISharedContext(): boolean;
 }
 
