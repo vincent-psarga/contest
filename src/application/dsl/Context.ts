@@ -1,13 +1,16 @@
-import type { IContext } from "../../domain/models/IContext";
+import type { IContext, Callbackable } from "../../domain/models/IContext";
 import { v4 as uuidv4 } from "uuid";
 import type { ITestContextRegistry } from "../../domain/services/ITestContextRegistry";
 import { describe } from "./describe";
 import type { ISharedContext } from "../../domain/models/ISharedContext";
 
-type SimpleWhenArgs<T> = [context: Partial<T>, callback: () => void];
+type SimpleWhenArgs<T> = [
+  context: Partial<Callbackable<T>>,
+  callback: () => void,
+];
 type WithTitleWhenArgs<T> = [
   description: string,
-  context: Partial<T>,
+  context: Partial<Callbackable<T>>,
   callback: () => void,
 ];
 
@@ -49,7 +52,7 @@ export class Context<T> implements IContext<T> {
 
   private getWhenParameters(...args: WhenArgs<T>): {
     description: string;
-    context: Partial<T>;
+    context: Partial<Callbackable<T>>;
     callback: () => void;
   } {
     if (isWithTitleWhenArgs(args)) {

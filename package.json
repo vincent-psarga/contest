@@ -3,9 +3,24 @@
   "version": "0.0.1",
   "description": "A JS test runner inspired by Rspec",
   "type": "module",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "contest": "./dist/bin/contest.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "contest": "tsx src/bin/contest.ts",
+    "build": "tsup",
+    "contest": "tsx src/bin/contest.ts --excludes \"/**/samples/**/*.ts\"",
     "test": "npm run contest",
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w ."
@@ -16,13 +31,14 @@
     "@jest/expect": "^30.4.1",
     "@types/node": "^25.9.1",
     "jest-mock": "^30.4.1",
+    "tsup": "^8.5.1",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
-  },
-  "dependencies": {
+    "typescript": "^6.0.3",
     "husky": "^9.1.7",
     "prettier": "^3.8.4",
-    "pretty-quick": "^4.2.2",
+    "pretty-quick": "^4.2.2"
+  },
+  "dependencies": {
     "uuid": "^14.0.0"
   }
 }

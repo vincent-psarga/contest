@@ -18,3 +18,6 @@ export function isISharedContext<T>(
 ): tbd is ISharedContext<T> {
   return respondsWith(tbd as ISharedContext<T>, "isISharedContext", true);
 }
+
+export type InferSharedContextType<T> =
+  T extends ISharedContext<infer U> ? U : never;

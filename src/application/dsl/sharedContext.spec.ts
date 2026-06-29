@@ -74,3 +74,19 @@ describe.with(
     });
   },
 );
+
+describe.with<UserContext & { someExtraProperty: boolean }>(
+  "A shared context can be extended at the describe level",
+  userContext,
+  (context) => {
+    it("loads the sharedContext properly", () => {
+      expect(context.get("username")).toEqual("someone@example.com");
+    });
+
+    context.when({ someExtraProperty: true }, () => {
+      it("allows setting extra properties", () => {
+        expect(context.get("someExtraProperty")).toEqual(true);
+      });
+    });
+  },
+);

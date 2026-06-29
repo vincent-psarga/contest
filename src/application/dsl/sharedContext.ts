@@ -8,3 +8,5 @@ export function sharedContext<T>(
 ): ISharedContext<T> {
   return new SharedContext(name, setup);
 }
+
+export type SharedContextType<T extends ISharedContext<T>> = T;

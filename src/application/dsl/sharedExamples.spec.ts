@@ -2,8 +2,8 @@ import { describe } from "./describe";
 import { it } from "./it";
 import { jestExpect as expect } from "@jest/expect";
 import { beforeEach } from "./beforeEach";
-import { SharedExamples } from "../models/SharedExamples";
 import { itBehavesLike } from "./itBehavesLike";
+import { sharedExamples } from "./sharedExamples";
 
 type IArrayLike<T> = {
   [index: number]: T | undefined;
@@ -33,7 +33,7 @@ class SampleArray<T> implements IArrayLike<T> {
   }
 }
 
-const anArray = new SharedExamples<{
+const anArray = sharedExamples<{
   makeSut: (...items: number[]) => IArrayLike<number>;
 }>("an array", (context) => {
   it("is empty if not initialized", () => {

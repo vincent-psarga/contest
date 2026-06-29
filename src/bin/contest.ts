@@ -14,6 +14,8 @@ type ContestRunOptions = {
   reporter: IEventListener;
   verbose: boolean;
   timeout: number;
+  includes: string[];
+  excludes: string[];
 };
 const consoleLogger = new ConsoleLogger(process.stdout.isTTY);
 
@@ -35,11 +37,25 @@ const argsParser = new ArgsParser<ContestRunOptions>()
     default: 1000,
     getValue: parseInt,
   })
+  .addOption("includes", {
+    description: "Test files to be included",
+    default: ["**/*.spec.ts"],
+    getValue: (arg: string) => arg.split(",").map((arg) => arg.trim()),
+  })
+  .addOption("excludes", {
+    description: "Test files to be excluded",
+    default: [],
+    getValue: (arg: string) => arg.split(",").map((arg) => arg.trim()),
+  })
   .addPositional("path", {});
 
 const args = argsParser.parse(process.argv.slice(2));
 
-Contest.initInstance({ timeout: args.timeout });
+Contest.initInstance({
+  timeout: args.timeout,
+  includes: args.includes,
+  excludes: args.excludes,
+});
 
 Contest.instance.addTestReporter(args.reporter);
 if (args.verbose) {

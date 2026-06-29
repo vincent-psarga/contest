@@ -9,7 +9,6 @@ import type { ITest } from "./domain/models/ITest";
 import type { ITestRunner } from "./domain/services/ITestRunner";
 import { TestRunner } from "./application/services/TestRunner";
 import type { TestBody } from "./domain/models/TestBody";
-import { Context } from "./application/dsl/Context";
 import type { ITestContextRegistry } from "./domain/services/ITestContextRegistry";
 import { TestContextRegistry } from "./application/services/TestContextRegistry";
 import * as path from "node:path";
@@ -29,6 +28,8 @@ type ContestOptions = {
   testRunner: ITestRunner;
   eventBus: IEventBus;
   timeout: number;
+  includes: string[];
+  excludes: string[];
 };
 
 const DEFAULT_TIMEOUT = 1000;
@@ -52,6 +53,8 @@ export class Contest {
   private readonly testPlanBuilder: ITestPlanBuilder;
   private readonly testContextRegistry: ITestContextRegistry;
   private readonly eventBus: IEventBus;
+  private readonly includes: string[];
+  private readonly excludes: string[];
 
   constructor(opts?: Partial<ContestOptions>) {
     this.eventBus = opts?.eventBus ?? new EventBus();
@@ -60,7 +63,11 @@ export class Contest {
       opts?.testContextRegistry ??
       new TestContextRegistry(() => this.testRegistry.currentTestContainer);
     this.testLoader =
-      opts?.testLoader ?? new FsTestLoader(this.eventBus, this.testRegistry);
+      opts?.testLoader ??
+      new FsTestLoader({
+        eventBus: this.eventBus,
+        testRegistry: this.testRegistry,
+      });
     this.testPlanBuilder =
       opts?.testPlanBuilder ??
       new TestPlanBuilder(opts?.timeout ?? DEFAULT_TIMEOUT);
@@ -71,6 +78,8 @@ export class Contest {
         this.testContextRegistry,
         opts?.timeout ?? DEFAULT_TIMEOUT,
       );
+    this.includes = opts?.includes ?? ["**/*.spec.ts"];
+    this.excludes = opts?.excludes ?? [];
   }
 
   addTestReporter(reporter: IEventListener) {
@@ -82,7 +91,10 @@ export class Contest {
     const testPath = p ? path.join(cwd, p) : cwd;
 
     this.eventBus.emit(ContestEvents.TestRunStarted, {});
-    await this.testLoader.load(testPath);
+    await this.testLoader.load(testPath, {
+      includes: this.includes,
+      excludes: this.excludes,
+    });
 
     const testPlan = this.testPlanBuilder.buildTestPlan(
       this.testRegistry.testContainers,
